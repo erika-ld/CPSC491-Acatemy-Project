@@ -7,8 +7,8 @@ export default function Index() {
       resizeMode="cover"> 
       <View style={styles.container}>
         <Text>This is the index page</Text>
-        <Link href="/Homepage" style={styles.button}>
-          Go to Homepage
+        <Link href = "/home_screen" style = {styles.button}>
+          Return Home
         </Link>
       </View>
     </ImageBackground>

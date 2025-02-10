@@ -1,7 +1,7 @@
 import { ImageBackground, Text, View, StyleSheet } from "react-native";
 import { Link, Stack } from "expo-router";
 
-export default function Homepage() {
+export default function Home() {
   return (
     <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover"> 
       <View style={styles.container}>
