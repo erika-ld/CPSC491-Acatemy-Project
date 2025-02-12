@@ -1,11 +1,17 @@
 import { ImageBackground, Text, View, StyleSheet } from "react-native";
 import { Link, Stack } from "expo-router";
+import React from "react";
+
 
 export default function Home() {
+  console.log("Home Screen Loaded");
   return (
     <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover"> 
       <View style={styles.container}>
-        <Text>This is the home page!</Text>
+        <Text>This is the Home page!</Text>
+        <Link href = "/login_screen" style = {styles.button}>
+          Login
+        </Link>
       </View>
     </ImageBackground>
   );
@@ -49,22 +55,4 @@ export const Box = () => {
 };
 */
 
-/*
-import React from 'react';
-import { View } from 'react-native';
-
-type MyComponentProps = {
-  // Add any props here if needed
-};
-
-const MyComponent: React.FC<MyComponentProps> = () => {
-  return (
-    <View className="box-border flex p-0 mx-auto my-0 min-h-[577px] w-[361px] max-md:w-full max-md:max-w-[361px] max-sm:w-full max-sm:min-h-screen">
-      {// Add child components here if needed }
-    </View>
-  );
-};
-
-export default MyComponent;
-*/
 
