@@ -1,15 +1,19 @@
-import { ImageBackground, Text, View, StyleSheet } from "react-native";
-import { Link, Stack } from "expo-router";
+import { ImageBackground, Text, View, StyleSheet, Button } from "react-native";
+import { Link } from "expo-router";
 import React from "react";
-
 
 export default function Home() {
   console.log("Home Screen Loaded");
   return (
     <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover"> 
       <View style={styles.container}>
+        <View style={styles.topLeftButton}>
+          <Link href="/to_do_list_screen" style={styles.button}>
+            <Text>Top Left Button</Text>
+          </Link>
+        </View>
         <Text>This is the Home page!</Text>
-        <Link href = "/login_screen" style = {styles.button}>
+        <Link href="/login_screen" style={styles.button}>
           Login
         </Link>
       </View>
@@ -34,8 +38,12 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
     color: "#000",
   },
+  topLeftButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+  },
 });
-
 
 
 /*
