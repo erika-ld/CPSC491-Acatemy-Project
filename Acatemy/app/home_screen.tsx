@@ -9,23 +9,29 @@ export default function Home() {
       <View style={styles.container}>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button}>
-            <Link href="/to_do_list_screen" style={styles.buttonText}>
-              <Text style={styles.buttonText}>To-Do List</Text>
+            <Link href="/to_do_list_screen" style={styles.link}>
+              <Text style={styles.buttonText} adjustsFontSizeToFit numberOfLines={1}>
+                To-Do List
+              </Text>
             </Link>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button}>
-            <Link href="/pet_maker_screen" style={styles.buttonText}>
-              <Text style={styles.buttonText}>New Pet</Text>
+            <Link href="/pet_maker_screen" style={styles.link}>
+              <Text style={styles.buttonText} adjustsFontSizeToFit numberOfLines={1}>
+                New Pet
+              </Text>
             </Link>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button}>
-            <Link href="/rewards_screen" style={styles.buttonText}>
-              <Text style={styles.buttonText}>Rewards</Text>
+            <Link href="/rewards_screen" style={styles.link}>
+              <Text style={styles.buttonText} adjustsFontSizeToFit numberOfLines={1}>
+                Rewards
+              </Text>
             </Link>
           </TouchableOpacity>
         </View>
         <Text>This is the Home page!</Text>
-        <Link href="/login_screen" style={styles.button}>
+        <Link href="/login_screen" style={styles.loginButton}>
           Login
         </Link>
       </View>
@@ -49,24 +55,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: '100%', // Adjust this value to control the spacing
+    width: '100%',
+    paddingHorizontal: 20,
     marginTop: 10,
   },
   button: {
+    flex: 1,
     backgroundColor: '#B58392',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
     borderWidth: 1,
     borderColor: '#fff',
+    marginHorizontal: 5,
+  },
+  link: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loginButton: {
+    backgroundColor: '#B58392',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#fff',
+    marginTop: 20,
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
-
 
 /*
 import React from "react";
