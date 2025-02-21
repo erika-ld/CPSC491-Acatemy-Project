@@ -1,6 +1,8 @@
-import { ImageBackground, Text, View, StyleSheet, TouchableOpacity } from "react-native";
+import { ImageBackground, Text, View, StyleSheet, TouchableOpacity, Image, Dimensions } from "react-native";
 import { Link } from "expo-router";
 import React from "react";
+
+const { width, height } = Dimensions.get('window');
 
 export default function Home() {
   console.log("Home Screen Loaded");
@@ -30,10 +32,11 @@ export default function Home() {
             </Link>
           </TouchableOpacity>
         </View>
-        <Text>This is the Home page!</Text>
-        <Link href="/login_screen" style={styles.loginButton}>
-          Login
-        </Link>
+        <View style={styles.horizontalContainer}>
+          <Image style={styles.acatemyLogo} source={require("../assets/images/Acatemy Title Image Home.png")}/>
+          <Image style={styles.petImage} source={require("../assets/images/Pet Image.png")}/>
+          <Text style={styles.text}>This is the Home page!</Text>
+        </View>
       </View>
     </ImageBackground>
   );
@@ -56,38 +59,60 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-    paddingHorizontal: 20,
-    marginTop: 10,
+    paddingHorizontal: '6%',  
+    marginTop: '5%',  
   },
   button: {
     flex: 1,
     backgroundColor: '#B58392',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: '2%',  
+    paddingHorizontal: '3%',  
     borderRadius: 5,
     borderWidth: 1,
     borderColor: '#fff',
-    marginHorizontal: 5,
+    marginHorizontal: '2%',  
+    display: 'flex'
   },
   link: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  horizontalContainer: {
+    flexDirection: "column",
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+    marginTop: '10%',  
+  },
+  acatemyLogo: {
+    flex: 1,
+    width: width * 0.25,   
+    height: height * 0.28,   
+  },
+  petImage: {
+    flex: 1,
+    width: width * 0.15,   
+    height: height * 0.20, 
+    marginTop: '8%',  
+  },
   loginButton: {
     backgroundColor: '#B58392',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: '2%',  
+    paddingHorizontal: '5%',  
     borderRadius: 5,
     borderWidth: 1,
     borderColor: '#fff',
-    marginTop: 20,
+    marginTop: '10%',  
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  text: {
+    marginTop: '10%',  
+    color: '#fff',
   },
 });
 
