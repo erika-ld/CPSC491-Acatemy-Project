@@ -1,4 +1,4 @@
-import { ImageBackground, Text, View, StyleSheet, TouchableOpacity, Image, Dimensions } from "react-native";
+import { ImageBackground, Text, View, StyleSheet, TouchableOpacity, Image, Dimensions, ScrollView } from "react-native";
 import { Link } from "expo-router";
 import React from "react";
 
@@ -9,6 +9,7 @@ export default function Home() {
   return (
     <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover"> 
       <View style={styles.container}>
+        <ScrollView>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button}>
             <Link href="/to_do_list_screen" style={styles.link}>
@@ -37,6 +38,7 @@ export default function Home() {
           <Image style={styles.petImage} source={require("../assets/images/Pet Image.png")}/>
           <Text style={styles.text}>This is the Home page!</Text>
         </View>
+        </ScrollView>
       </View>
     </ImageBackground>
   );
@@ -79,7 +81,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   horizontalContainer: {
-    flexDirection: "column",
+    flexDirection: 'column',
     justifyContent: 'space-evenly',
     alignItems: 'center',
     marginTop: '10%',  
