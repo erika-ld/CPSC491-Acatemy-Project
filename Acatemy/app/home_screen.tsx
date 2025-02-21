@@ -116,21 +116,5 @@ const styles = StyleSheet.create({
   },
 });
 
-/*
-import React from "react";
-import "./style.css";
-
-export const Box = () => {
-  return (
-    <div className="box">
-      <img
-        className="background"
-        alt="Background"
-        src="https://c.animaapp.com/WYprTfst/img/background.png"
-      />
-    </div>
-  );
-};
-*/
 
 
