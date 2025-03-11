@@ -8,13 +8,11 @@ export default function Index() {
   return (
     <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover"> 
       <View style={styles.container}>
-        <Text>This is the index/landing page</Text>
         <Link href = "/home_screen" style = {styles.button}>
           Go Home
         </Link>
         <View style={styles.horizontalContainer}>
           <Image style={styles.acatemyLogo} source={require("../assets/images/Acatemy Title Image.png")}/>
-          <Text style={styles.text}>This is the landing page!</Text>
           <Link href="/login_screen" style={styles.loginButton}>
             Login
           </Link>
@@ -53,9 +51,12 @@ const styles = StyleSheet.create({
     height: height * 0.28,   
   },
   loginButton: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 18,
     backgroundColor: '#B58392',
-    paddingVertical: '2%',  
-    paddingHorizontal: '5%',  
+    paddingVertical: '3%',  
+    paddingHorizontal: '8%',  
     borderRadius: 5,
     borderWidth: 1,
     borderColor: '#fff',
