@@ -50,7 +50,7 @@ export default function TimerScreen() {
     const hoursInt = parseInt(hours, 10);
     const minutesInt = parseInt(minutes, 10);
 
-    if (isNaN(hoursInt) || hoursInt < 0 || hoursInt >= 24) {
+    if ((isNaN(hoursInt) || hoursInt < 0 || hoursInt >= 24) && hours !== "") {
       Alert.alert("Invalid Input", "Please enter a valid number of hours (0-23).");
       return false;
     }
@@ -60,14 +60,19 @@ export default function TimerScreen() {
       return false;
     }
 
+    if (hours === "" && minutes === "") {
+      Alert.alert("Invalid Input", "Please enter a valid number of hours or minutes.");
+      return false;
+    }
+
     return true;
   };
 
   const handleStartTimer = () => {
     if (validateTime()) {
-      const totalSeconds = parseInt(hours, 10) * 3600 + parseInt(minutes, 10) * 60;
+      const totalSeconds = (parseInt(hours, 10) || 0) * 3600 + (parseInt(minutes, 10) || 0) * 60;
       startTimer(totalSeconds);
-      console.log(`Starting timer for ${hours} hours and ${minutes} minutes`);
+      console.log(`Starting timer for ${hours || 0} hours and ${minutes || 0} minutes`);
     }
   };
 
