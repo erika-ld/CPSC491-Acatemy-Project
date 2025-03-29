@@ -1,6 +1,8 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { ImageBackground, Text, View, StyleSheet, Dimensions, TouchableOpacity, TextInput, Alert, Image } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 import { TimerContext } from './timerContext';
+import { useCoins } from './coinsContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -8,8 +10,57 @@ export default function TimerScreen() {
   console.log("Focus Timer Screen Loaded");
 
   const { timer, startTimer, pauseTimer, resumeTimer, resetTimer, isRunning, isPaused } = useContext(TimerContext);
+  const { coins, addCoins } = useCoins(); // Access global coins and addCoins function
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
+  const [dailyCoins, setDailyCoins] = useState(0); // State to track coins collected today
+  const [lastCoinTime, setLastCoinTime] = useState(0); // Tracks the last time coins were awarded
+
+  // Load coins and last reset time from AsyncStorage
+  useEffect(() => {
+    const loadCoinsData = async () => {
+      try {
+        const storedDailyCoins = await AsyncStorage.getItem('dailyCoins');
+        const storedResetTime = await AsyncStorage.getItem('lastResetTime');
+        const currentTime = Date.now();
+
+        if (storedResetTime) {
+          const lastResetTime = parseInt(storedResetTime, 10);
+          const hoursSinceLastReset = (currentTime - lastResetTime) / (1000 * 60 * 60);
+
+          if (hoursSinceLastReset >= 24) {
+            // Reset daily coins if 24 hours have passed
+            setDailyCoins(0);
+            await AsyncStorage.setItem('dailyCoins', '0');
+            await AsyncStorage.setItem('lastResetTime', currentTime.toString());
+          } else if (storedDailyCoins) {
+            // Load daily coins if within the same day
+            setDailyCoins(parseInt(storedDailyCoins, 10));
+          }
+        } else {
+          // Initialize reset time if not set
+          await AsyncStorage.setItem('lastResetTime', currentTime.toString());
+        }
+      } catch (error) {
+        console.error('Failed to load coins data:', error);
+      }
+    };
+
+    loadCoinsData();
+  }, []);
+
+  // Save daily coins to AsyncStorage whenever they change
+  useEffect(() => {
+    const saveDailyCoins = async () => {
+      try {
+        await AsyncStorage.setItem('dailyCoins', dailyCoins.toString());
+      } catch (error) {
+        console.error('Failed to save daily coins:', error);
+      }
+    };
+
+    saveDailyCoins();
+  }, [dailyCoins]);
 
   const formatTime = (time: number) => {
     const hrs = Math.floor(time / 3600);
@@ -71,15 +122,26 @@ export default function TimerScreen() {
   const handleStartTimer = () => {
     if (validateTime()) {
       const totalSeconds = (parseInt(hours, 10) || 0) * 3600 + (parseInt(minutes, 10) || 0) * 60;
+      setLastCoinTime(totalSeconds); // Initialize the last coin time to the total seconds
       startTimer(totalSeconds);
       console.log(`Starting timer for ${hours || 0} hours and ${minutes || 0} minutes`);
     }
   };
 
+// Effect to track timer progress and award coins
+useEffect(() => {
+  if (timer > 0 && lastCoinTime - timer >= 60) { // Check if 1 minute has passed since the last coin was awarded
+    setDailyCoins((prevDailyCoins) => prevDailyCoins + 1); // Increment daily coins
+    addCoins(1); // Increment global coins
+    setLastCoinTime(timer); // Update the last coin time
+  }
+}, [timer]);
+
   return (
     <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover"> 
       <View style={styles.container}>
         <Text style={styles.title}>Focus Timer</Text>
+        <Text style={styles.coinsText}>Coins Collected Today: {dailyCoins} 🪙</Text>
         <Image style={styles.petImage} source={require("../assets/images/Cat Transparent Background.png")}/>
         <Text style={styles.timerText}>{formatTime(timer)}</Text>
         <View style={styles.inputContainer}>
@@ -106,17 +168,6 @@ export default function TimerScreen() {
             <Text style={styles.inputLabel}>Minutes</Text>
           </View>
         </View>
-        <View style={styles.lowerButtonContainer}>
-          <TouchableOpacity style={styles.pauseButton} onPress={pauseTimer} disabled={!isRunning || isPaused}>
-            <Text style={styles.buttonText}>Pause</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.resumeButton} onPress={resumeTimer} disabled={!isPaused}>
-            <Text style={styles.buttonText}>Resume</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={resetTimer}>
-            <Text style={styles.buttonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
         <TouchableOpacity style={styles.startButton} onPress={handleStartTimer}>
           <Text style={styles.startText}>Start Timer</Text>
         </TouchableOpacity>
@@ -130,7 +181,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "center",
-    paddingTop: 40, // Adjust this value to move the content down
+    paddingTop: 40,
   },
   image: {
     width: '100%',
@@ -143,7 +194,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 20,
-    marginTop: 20, // Adjust this value to move the title up
+    marginTop: 20,
+  },
+  coinsText: {
+    fontSize: 20,
+    color: '#fff',
+    marginBottom: 20,
   },
   petImage: {
     width: width * 0.15,   
@@ -188,7 +244,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     alignItems: 'center',
     marginBottom: 20,
-    marginTop: 20, // Add marginTop to align with input boxes
+    marginTop: 20,
   },
   pauseButton: {
     backgroundColor: '#ebda7c',
@@ -223,7 +279,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 1,
     borderColor: '#fff',
-    marginTop: 20, // Add marginTop to align with input boxes
+    marginTop: 20,
   },
   buttonText: {
     color: '#6B385C',
