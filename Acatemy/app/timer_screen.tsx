@@ -16,51 +16,51 @@ export default function TimerScreen() {
   const [dailyCoins, setDailyCoins] = useState(0); // State to track coins collected today
   const [lastCoinTime, setLastCoinTime] = useState(0); // Tracks the last time coins were awarded
 
-  // Load coins and last reset time from AsyncStorage
-  useEffect(() => {
-    const loadCoinsData = async () => {
-      try {
-        const storedDailyCoins = await AsyncStorage.getItem('dailyCoins');
-        const storedResetTime = await AsyncStorage.getItem('lastResetTime');
-        const currentTime = Date.now();
+// Load coins and last reset time from AsyncStorage
+useEffect(() => {
+  const loadCoinsData = async () => {
+    try {
+      const storedDailyCoins = await AsyncStorage.getItem('dailyCoins');
+      const storedResetTime = await AsyncStorage.getItem('lastResetTime');
+      const currentTime = Date.now();
 
-        if (storedResetTime) {
-          const lastResetTime = parseInt(storedResetTime, 10);
-          const hoursSinceLastReset = (currentTime - lastResetTime) / (1000 * 60 * 60);
+      if (storedResetTime) {
+        const lastResetTime = parseInt(storedResetTime, 10);
+        const hoursSinceLastReset = (currentTime - lastResetTime) / (1000 * 60 * 60);
 
-          if (hoursSinceLastReset >= 24) {
-            // Reset daily coins if 24 hours have passed
-            setDailyCoins(0);
-            await AsyncStorage.setItem('dailyCoins', '0');
-            await AsyncStorage.setItem('lastResetTime', currentTime.toString());
-          } else if (storedDailyCoins) {
-            // Load daily coins if within the same day
-            setDailyCoins(parseInt(storedDailyCoins, 10));
-          }
-        } else {
-          // Initialize reset time if not set
+        if (hoursSinceLastReset >= 24) {
+          // Reset daily coins if 24 hours have passed
+          setDailyCoins(0);
+          await AsyncStorage.setItem('dailyCoins', '0');
           await AsyncStorage.setItem('lastResetTime', currentTime.toString());
+        } else if (storedDailyCoins) {
+          // Load daily coins if within the same day
+          setDailyCoins(parseInt(storedDailyCoins, 10));
         }
-      } catch (error) {
-        console.error('Failed to load coins data:', error);
+      } else {
+        // Initialize reset time if not set
+        await AsyncStorage.setItem('lastResetTime', currentTime.toString());
       }
-    };
+    } catch (error) {
+      console.error('Failed to load coins data:', error);
+    }
+  };
 
-    loadCoinsData();
-  }, []);
+  loadCoinsData();
+}, []);
 
-  // Save daily coins to AsyncStorage whenever they change
-  useEffect(() => {
-    const saveDailyCoins = async () => {
-      try {
-        await AsyncStorage.setItem('dailyCoins', dailyCoins.toString());
-      } catch (error) {
-        console.error('Failed to save daily coins:', error);
-      }
-    };
+// Save daily coins to AsyncStorage whenever they change
+useEffect(() => {
+  const saveDailyCoins = async () => {
+    try {
+      await AsyncStorage.setItem('dailyCoins', dailyCoins.toString());
+    } catch (error) {
+      console.error('Failed to save daily coins:', error);
+    }
+  };
 
-    saveDailyCoins();
-  }, [dailyCoins]);
+  saveDailyCoins();
+}, [dailyCoins]);
 
   const formatTime = (time: number) => {
     const hrs = Math.floor(time / 3600);
@@ -149,7 +149,6 @@ const handleReset = () => {
   // Reset all values
   setHours("");
   setMinutes("");
-  setDailyCoins(0);
   setLastCoinTime(0);
   resetTimer(); // Stop and reset the timer
   console.log("Timer and values have been reset.");

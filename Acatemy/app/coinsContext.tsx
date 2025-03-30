@@ -3,6 +3,7 @@ import React, { createContext, useState, useContext } from 'react';
 type CoinsContextType = {
   coins: number;
   addCoins: (amount: number) => void;
+  resetCoins: () => void;
 };
 
 const CoinsContext = createContext<CoinsContextType | undefined>(undefined);
@@ -14,8 +15,12 @@ export const CoinsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCoins((prevCoins) => prevCoins + amount);
   };
 
+  const resetCoins = () => {
+    setCoins(0);
+  };
+
   return (
-    <CoinsContext.Provider value={{ coins, addCoins }}>
+    <CoinsContext.Provider value={{ coins, addCoins, resetCoins }}>
       {children}
     </CoinsContext.Provider>
   );
