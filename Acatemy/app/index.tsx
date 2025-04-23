@@ -8,9 +8,6 @@ export default function Index() {
   return (
     <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover"> 
       <View style={styles.container}>
-        <Link href = "/home_screen" style = {styles.button}>
-          Go Home
-        </Link>
         <View style={styles.horizontalContainer}>
           <Image style={styles.acatemyLogo} source={require("../assets/images/Acatemy Title Image.png")}/>
           <Link href="/login_screen" style={styles.loginButton}>

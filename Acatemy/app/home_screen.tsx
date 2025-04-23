@@ -2,6 +2,9 @@ import { ImageBackground, Text, View, StyleSheet, TouchableOpacity, Image, Dimen
 import { Link } from "expo-router";
 import React, { useContext } from "react";
 import { TimerContext } from "./timerContext";
+//import { useNavigation } from '@react-navigation/native';
+
+//const navigation = useNavigation();
 
 const { width, height } = Dimensions.get('window');
 

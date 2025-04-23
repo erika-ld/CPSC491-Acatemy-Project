@@ -1,66 +1,160 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { ImageBackground, Text, View, StyleSheet, Dimensions, TouchableOpacity, TextInput, Alert, Image } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
+import React, { useState, useContext, useEffect, useCallback } from 'react';
+import { ImageBackground, Text, View, StyleSheet, Dimensions, TouchableOpacity, TextInput, Alert, Image, ActivityIndicator } from 'react-native';
+import { doc, getDoc, setDoc, serverTimestamp, updateDoc, increment } from "firebase/firestore";
+import { db, auth } from '../firebase';
 import { TimerContext } from './timerContext';
-import { useCoins } from './coinsContext'; // Ensure this is correctly imported
+import { useCoins } from './coinsContext';
+import { AppState } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
 export default function TimerScreen() {
-  console.log("Focus Timer Screen Loaded");
-
   const { timer, startTimer, pauseTimer, resumeTimer, resetTimer, isRunning, isPaused } = useContext(TimerContext);
-  const { addCoins } = useCoins(); // Access global coin management
+  const { coins, setCoins } = useCoins();
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
-  const [dailyCoins, setDailyCoins] = useState(0); // State to track coins collected today
-  const [lastCoinTime, setLastCoinTime] = useState(0); // Tracks the last time coins were awarded
+  const [dailyCoins, setDailyCoins] = useState(0);
+  const [lastCoinTime, setLastCoinTime] = useState(0);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [lastMinuteCounted, setLastMinuteCounted] = useState(false);
 
-// Load coins and last reset time from AsyncStorage
-useEffect(() => {
-  const loadCoinsData = async () => {
+  // Get authenticated user ID and load data
+  useEffect(() => {
+    const getCurrentUser = () => {
+      const user = auth.currentUser;
+      if (user) {
+        setUserId(user.uid);
+      } else {
+        setUserId("guest_user");
+      }
+      setIsLoading(false);
+    };
+
+    getCurrentUser();
+
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setUserId(user.uid);
+      } else {
+        setUserId("guest_user");
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Always fetch latest data from Firestore when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      if (userId && !isLoading) {
+        fetchAndSyncCoins();
+      }
+      return () => {
+        // Save coins when navigating away
+        saveDailyCoins(dailyCoins);
+      };
+    }, [userId, isLoading])
+  );
+
+  // Fetch and sync coins from Firestore to local and global state
+  const fetchAndSyncCoins = async () => {
+    if (!userId) return;
     try {
-      const storedDailyCoins = await AsyncStorage.getItem('dailyCoins');
-      const storedResetTime = await AsyncStorage.getItem('lastResetTime');
-      const currentTime = Date.now();
-
-      if (storedResetTime) {
-        const lastResetTime = parseInt(storedResetTime, 10);
+      const userDoc = doc(db, "users", userId);
+      const docSnap = await getDoc(userDoc);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const currentTime = Date.now();
+        const lastResetTime = data.lastResetTime?.toMillis ? data.lastResetTime.toMillis() : 0;
         const hoursSinceLastReset = (currentTime - lastResetTime) / (1000 * 60 * 60);
-
         if (hoursSinceLastReset >= 24) {
-          // Reset daily coins if 24 hours have passed
           setDailyCoins(0);
-          await AsyncStorage.setItem('dailyCoins', '0');
-          await AsyncStorage.setItem('lastResetTime', currentTime.toString());
-        } else if (storedDailyCoins) {
-          // Load daily coins if within the same day
-          setDailyCoins(parseInt(storedDailyCoins, 10));
+          setCoins(0);
+          await setDoc(userDoc, {
+            dailyCoins: 0,
+            lastResetTime: serverTimestamp(),
+            lastUpdated: serverTimestamp()
+          }, { merge: true });
+        } else {
+          setDailyCoins(data.dailyCoins || 0);
+          setCoins(data.dailyCoins || 0);
         }
       } else {
-        // Initialize reset time if not set
-        await AsyncStorage.setItem('lastResetTime', currentTime.toString());
+        await setDoc(userDoc, {
+          dailyCoins: 0,
+          lastResetTime: serverTimestamp(),
+          lastUpdated: serverTimestamp()
+        });
+        setDailyCoins(0);
+        setCoins(0);
       }
     } catch (error) {
       console.error('Failed to load coins data:', error);
+      Alert.alert("Error", "Failed to load your coins data. Please check your connection.");
     }
   };
 
-  loadCoinsData();
-}, []);
-
-// Save daily coins to AsyncStorage whenever they change
-useEffect(() => {
-  const saveDailyCoins = async () => {
+  // Save daily coins to Firestore
+  const saveDailyCoins = async (coinsValue: number) => {
+    if (!userId) return;
     try {
-      await AsyncStorage.setItem('dailyCoins', dailyCoins.toString());
+      const userDoc = doc(db, "users", userId);
+      await setDoc(userDoc, {
+        dailyCoins: coinsValue,
+        lastUpdated: serverTimestamp()
+      }, { merge: true });
     } catch (error) {
       console.error('Failed to save daily coins:', error);
     }
   };
 
-  saveDailyCoins();
-}, [dailyCoins]);
+  // Award coins for every minute passed
+  useEffect(() => {
+    if (timer > 0 && lastCoinTime > 0) {
+      const secondsPassed = lastCoinTime - timer;
+      if (secondsPassed >= 60) {
+        const minutesPassed = Math.floor(secondsPassed / 60);
+        setDailyCoins(prev => {
+          const newCoins = prev + minutesPassed;
+          setCoins(newCoins);
+          saveDailyCoins(newCoins);
+          return newCoins;
+        });
+        setLastCoinTime(timer - (secondsPassed % 60));
+      }
+    }
+    // Reset flags when timer is restarted
+    if (timer > 0 && timer === lastCoinTime) {
+      setLastMinuteCounted(false);
+    }
+  }, [timer]);
+
+  // Award coin for the last minute when timer completes
+  useEffect(() => {
+    if (timer === 0 && !lastMinuteCounted && lastCoinTime > 0) {
+      setDailyCoins(prev => {
+        const newCoins = prev + 1;
+        setCoins(newCoins);
+        saveDailyCoins(newCoins);
+        return newCoins;
+      });
+      setLastCoinTime(0);
+      setLastMinuteCounted(true);
+    }
+  }, [timer, lastMinuteCounted, lastCoinTime]);
+
+  // Save coins when app goes to background
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'background' || nextAppState === 'inactive') {
+        saveDailyCoins(dailyCoins);
+      }
+    });
+    return () => subscription.remove();
+  }, [dailyCoins, userId]);
 
   const formatTime = (time: number) => {
     const hrs = Math.floor(time / 3600);
@@ -71,146 +165,120 @@ useEffect(() => {
 
   const handleHoursChange = (text: string) => {
     let value = parseInt(text, 10);
-    if (isNaN(value)) {
-      setHours("");
-    } else {
-      if (value < 0) {
-        value = 0;
-      } else if (value >= 24) {
-        value = 23;
-      }
-      setHours(value.toString());
-    }
+    if (isNaN(value)) setHours("");
+    else setHours(Math.max(0, Math.min(23, value)).toString());
   };
 
   const handleMinutesChange = (text: string) => {
     let value = parseInt(text, 10);
-    if (isNaN(value)) {
-      setMinutes("");
-    } else {
-      if (value < 0) {
-        value = 0;
-      } else if (value >= 60) {
-        value = 59;
-      }
-      setMinutes(value.toString());
-    }
+    if (isNaN(value)) setMinutes("");
+    else setMinutes(Math.max(0, Math.min(59, value)).toString());
   };
 
   const validateTime = () => {
     const hoursInt = parseInt(hours, 10);
     const minutesInt = parseInt(minutes, 10);
-
     if ((isNaN(hoursInt) || hoursInt < 0 || hoursInt >= 24) && hours !== "") {
       Alert.alert("Invalid Input", "Please enter a valid number of hours (0-23).");
       return false;
     }
-
     if (isNaN(minutesInt) || minutesInt < 0 || minutesInt >= 60) {
       Alert.alert("Invalid Input", "Please enter a valid number of minutes (0-59)");
       return false;
     }
-
     if (hours === "" && minutes === "") {
       Alert.alert("Invalid Input", "Please enter a valid number of hours or minutes.");
       return false;
     }
-
     return true;
   };
 
   const handleStartTimer = () => {
     if (validateTime()) {
       const totalSeconds = (parseInt(hours, 10) || 0) * 3600 + (parseInt(minutes, 10) || 0) * 60;
-      setLastCoinTime(totalSeconds); // Initialize the last coin time to the total seconds
+      setLastCoinTime(totalSeconds);
+      setLastMinuteCounted(false);
       startTimer(totalSeconds);
-      console.log(`Starting timer for ${hours || 0} hours and ${minutes || 0} minutes`);
     }
   };
 
-// Effect to track timer progress and award coins
-useEffect(() => {
-  if (timer > 0 && lastCoinTime - timer >= 60) {
-    // Check if 1 minute has passed since the last coin was awarded
-    setDailyCoins((prevDailyCoins) => prevDailyCoins + 1); // Increment daily coins
-    addCoins(1); // Increment global coins
-    setLastCoinTime(timer); // Update the last coin time
+  const handleReset = () => {
+    setHours("");
+    setMinutes("");
+    setLastCoinTime(0);
+    setLastMinuteCounted(false);
+    resetTimer();
+  };
+
+  if (isLoading) {
+    return (
+      <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover">
+        <View style={[styles.container, {justifyContent: 'center'}]}>
+          <ActivityIndicator size="large" color="#fff" />
+          <Text style={styles.title}>Loading...</Text>
+        </View>
+      </ImageBackground>
+    );
   }
 
-  if (timer === 0 && lastCoinTime > 0) {
-    // Handle the last minute when the timer reaches 0
-    setDailyCoins((prevDailyCoins) => prevDailyCoins + 1); // Increment daily coins
-    addCoins(1); // Increment global coins
-    setLastCoinTime(0); // Reset lastCoinTime to prevent duplicate increments
-  }
-}, [timer]);
-
-const handleReset = () => {
-  // Reset all values
-  setHours("");
-  setMinutes("");
-  setLastCoinTime(0);
-  resetTimer(); // Stop and reset the timer
-  console.log("Timer and values have been reset.");
-};
-
-return (
-  <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover">
-    <View style={styles.container}>
-      <Text style={styles.title}>Focus Timer</Text>
-      <Text style={styles.coinsText}>Coins Collected Today: {dailyCoins} 🪙</Text>
-      <Image style={styles.petImage} source={require("../assets/images/Cat Transparent Background.png")} />
-      <Text style={styles.timerText}>{formatTime(timer)}</Text>
-      <View style={styles.inputContainer}>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.input}
-            keyboardType="numeric"
-            placeholder="00"
-            placeholderTextColor="#fff"
-            value={hours}
-            onChangeText={handleHoursChange}
-          />
-          <Text style={styles.inputLabel}>Hours</Text>
+  return (
+    <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover">
+      <View style={styles.container}>
+        <Text style={styles.title}>Focus Timer</Text>
+        <Text style={styles.coinsText}>Coins Collected Today: {dailyCoins} 🪙</Text>
+        <Image style={styles.petImage} source={require("../assets/images/Cat Transparent Background.png")} />
+        <Text style={styles.timerText}>{formatTime(timer)}</Text>
+        <View style={styles.inputContainer}>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              placeholder="00"
+              placeholderTextColor="#fff"
+              value={hours}
+              onChangeText={handleHoursChange}
+            />
+            <Text style={styles.inputLabel}>Hours</Text>
+          </View>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              placeholder="00"
+              placeholderTextColor="#fff"
+              value={minutes}
+              onChangeText={handleMinutesChange}
+            />
+            <Text style={styles.inputLabel}>Minutes</Text>
+          </View>
         </View>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.input}
-            keyboardType="numeric"
-            placeholder="00"
-            placeholderTextColor="#fff"
-            value={minutes}
-            onChangeText={handleMinutesChange}
-          />
-          <Text style={styles.inputLabel}>Minutes</Text>
+        <View style={styles.lowerButtonContainer}>
+          <TouchableOpacity style={styles.pauseButton} onPress={pauseTimer} disabled={!isRunning || isPaused}>
+            <Text style={styles.buttonText}>Pause</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.resumeButton} onPress={resumeTimer} disabled={!isPaused}>
+            <Text style={styles.buttonText}>Resume</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.cancelButton} onPress={resetTimer}>
+            <Text style={styles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
         </View>
+        <View style={styles.startResetContainer}>
+          <TouchableOpacity style={styles.startButton} onPress={handleStartTimer}>
+            <Text style={styles.startText}>Start Timer</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
+            <Text style={styles.resetText}>Reset Timer</Text>
+          </TouchableOpacity>
+        </View>
+        {/* Refresh button removed */}
       </View>
-      <View style={styles.lowerButtonContainer}>
-        <TouchableOpacity style={styles.pauseButton} onPress={pauseTimer} disabled={!isRunning || isPaused}>
-          <Text style={styles.buttonText}>Pause</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.resumeButton} onPress={resumeTimer} disabled={!isPaused}>
-          <Text style={styles.buttonText}>Resume</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.cancelButton} onPress={resetTimer}>
-          <Text style={styles.buttonText}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.startResetContainer}>
-      <TouchableOpacity style={styles.startButton} onPress={handleStartTimer}>
-        <Text style={styles.startText}>Start Timer</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
-        <Text style={styles.resetText}>Reset Timer</Text>
-      </TouchableOpacity>
-    </View>
-    </View>
-  </ImageBackground>
-);
+    </ImageBackground>
+  );
 }
 
-
 const styles = StyleSheet.create({
+  // ...styles unchanged...
   container: {
     flex: 1,
     justifyContent: "flex-start",
@@ -244,7 +312,17 @@ const styles = StyleSheet.create({
   coinsText: {
     fontSize: 20,
     color: "#fff",
-    marginBottom: 20,
+    marginBottom: 5,
+  },
+  userText: {
+    fontSize: 14,
+    color: "#98d99a",
+    marginBottom: 5,
+  },
+  guestText: {
+    fontSize: 14,
+    color: "#ebda7c",
+    marginBottom: 5,
   },
   inputContainer: {
     flexDirection: "row",
@@ -313,7 +391,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 1,
     borderColor: "#fff",
-    marginHorizontal: 10, // Add space between the buttons
+    marginHorizontal: 10,
   },
   buttonText: {
     color: "#6B385C",
@@ -329,11 +407,11 @@ const styles = StyleSheet.create({
   },
   startResetContainer: {
     flexDirection: "row",
-    justifyContent: "space-between", // Add space between the buttons
+    justifyContent: "space-between",
     alignItems: "center",
     marginTop: 20,
-    width: "100%", // Ensure the container spans the full width
-    paddingHorizontal: 30, // Add padding for spacing from the edges
+    width: "100%",
+    paddingHorizontal: 30,
   },
   resetButton: {
     backgroundColor: "#B58392",
@@ -342,12 +420,21 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 1,
     borderColor: "#fff",
-    marginHorizontal: 10, // Add space between the buttons
+    marginHorizontal: 10,
   },
   resetText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
+  },
+  refreshButton: {
+    backgroundColor: "#6B9AC4",
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#fff",
+    marginTop: 15,
   },
 });

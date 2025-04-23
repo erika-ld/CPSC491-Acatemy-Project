@@ -1,7 +1,7 @@
 import { ImageBackground, Text, View, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert } from "react-native";
 import { Link, useRouter } from "expo-router";
 import React, { useState } from "react";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { auth } from "../firebase"; // Import Firebase auth instance
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth"; // Import functions properly
 
