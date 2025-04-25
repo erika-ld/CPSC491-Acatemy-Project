@@ -1,13 +1,11 @@
 import React, { useState, useContext, useEffect, useCallback } from 'react';
-import { ImageBackground, Text, View, StyleSheet, Dimensions, TouchableOpacity, TextInput, Alert, Image, ActivityIndicator } from 'react-native';
-import { doc, getDoc, setDoc, serverTimestamp, updateDoc, increment } from "firebase/firestore";
+import { ImageBackground, Text, View, StyleSheet, TouchableOpacity, TextInput, Alert, Image, ActivityIndicator } from 'react-native';
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db, auth } from '../firebase';
 import { TimerContext } from './timerContext';
 import { useCoins } from './coinsContext';
 import { AppState } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-
-const { width, height } = Dimensions.get('window');
 
 export default function TimerScreen() {
   const { timer, startTimer, pauseTimer, resumeTimer, resetTimer, isRunning, isPaused } = useContext(TimerContext);
@@ -226,7 +224,13 @@ export default function TimerScreen() {
       <View style={styles.container}>
         <Text style={styles.title}>Focus Timer</Text>
         <Text style={styles.coinsText}>Coins Collected Today: {dailyCoins} 🪙</Text>
-        <Image style={styles.petImage} source={require("../assets/images/Cat Transparent Background.png")} />
+        <View style={styles.petImageContainer}>
+          <Image
+            style={styles.petImage}
+            source={require("../assets/images/Cat Transparent Background.png")}
+            resizeMode="contain"
+          />
+        </View>
         <Text style={styles.timerText}>{formatTime(timer)}</Text>
         <View style={styles.inputContainer}>
           <View style={styles.inputWrapper}>
@@ -271,25 +275,26 @@ export default function TimerScreen() {
             <Text style={styles.resetText}>Reset Timer</Text>
           </TouchableOpacity>
         </View>
-        {/* Refresh button removed */}
       </View>
     </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  // ...styles unchanged...
+  image: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "center",
     paddingTop: 40,
-  },
-  image: {
+    paddingHorizontal: 20,
     width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
   },
   title: {
     fontSize: 24,
@@ -297,47 +302,50 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginBottom: 20,
     marginTop: 20,
+    alignSelf: "center",
+  },
+  coinsText: {
+    fontSize: 20,
+    color: "#fff",
+    marginBottom: 5,
+    alignSelf: "center",
+  },
+  petImageContainer: {
+    width: "15%",
+    aspectRatio: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 20,
   },
   petImage: {
-    width: width * 0.15,
-    height: height * 0.20,
-    marginTop: "8%",
+    width: "100%",
+    height: "100%",
   },
   timerText: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#fff",
     marginBottom: 20,
-  },
-  coinsText: {
-    fontSize: 20,
-    color: "#fff",
-    marginBottom: 5,
-  },
-  userText: {
-    fontSize: 14,
-    color: "#98d99a",
-    marginBottom: 5,
-  },
-  guestText: {
-    fontSize: 14,
-    color: "#ebda7c",
-    marginBottom: 5,
+    alignSelf: "center",
   },
   inputContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,
+    width: "20%",
   },
   inputWrapper: {
     flexDirection: "column",
     alignItems: "center",
     marginHorizontal: 10,
+    flex: 1,
   },
   input: {
     height: 50,
-    width: 100,
+    width: "100%",
+    minWidth: 80,
+    maxWidth: 120,
     color: "#fff",
     borderRadius: 5,
     borderWidth: 1,
@@ -357,6 +365,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
     marginTop: 20,
+    width: "30%",
   },
   pauseButton: {
     backgroundColor: "#ebda7c",
@@ -365,6 +374,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 1,
     borderColor: "#fff",
+    flex: 1,
+    marginHorizontal: 5,
   },
   resumeButton: {
     backgroundColor: "#98d99a",
@@ -373,8 +384,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 1,
     borderColor: "#fff",
-    marginLeft: 10,
-    marginRight: 10,
+    flex: 1,
+    marginHorizontal: 5,
   },
   cancelButton: {
     backgroundColor: "#eba2b7",
@@ -383,6 +394,16 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 1,
     borderColor: "#fff",
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  startResetContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 20,
+    width: "25%",
+    paddingHorizontal: 30,
   },
   startButton: {
     backgroundColor: "#B58392",
@@ -392,6 +413,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#fff",
     marginHorizontal: 10,
+    flex: 1,
+  },
+  resetButton: {
+    backgroundColor: "#B58392",
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#fff",
+    marginHorizontal: 10,
+    flex: 1,
   },
   buttonText: {
     color: "#6B385C",
@@ -405,36 +437,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
   },
-  startResetContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 20,
-    width: "100%",
-    paddingHorizontal: 30,
-  },
-  resetButton: {
-    backgroundColor: "#B58392",
-    paddingVertical: 12,
-    paddingHorizontal: 22,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: "#fff",
-    marginHorizontal: 10,
-  },
   resetText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
-  },
-  refreshButton: {
-    backgroundColor: "#6B9AC4",
-    paddingVertical: 12,
-    paddingHorizontal: 22,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: "#fff",
-    marginTop: 15,
   },
 });
