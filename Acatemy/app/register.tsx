@@ -1,13 +1,12 @@
-import { ImageBackground, Text, View, StyleSheet, ScrollView, TextInput, TouchableOpacity } from "react-native";
-import { Link, Stack } from "expo-router";
+import { ImageBackground, Text, View, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert } from "react-native";
+import { Link, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { auth } from "../firebase"; // Import Firebase auth instance
-import { signInWithEmailAndPassword } from "firebase/auth"; // Import functions properly
-
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth"; // Import functions properly
 
 export default function Login() {
-  console.log("Login Screen Loaded");
+  console.log("Register Screen Loaded");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -17,12 +16,12 @@ export default function Login() {
     setShowPassword(!showPassword);
   };
 
-  // Login User
-  const handleLogin = async () => {
+// Register User
+  const handleRegister = async () => {
     setError("");
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      alert("Login Successful!");
+      await createUserWithEmailAndPassword(auth, email, password);
+      alert("Account Created! You can now log in.");
     } catch (err) {
       setError((err as Error).message);
     }
@@ -34,31 +33,16 @@ export default function Login() {
         <ScrollView>
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-        <TextInput placeholder="Email" 
-            value={email} 
-            onChangeText={setEmail} 
-            style={styles.input} 
-            autoCapitalize="none"/>
-            
-            <TextInput 
-            placeholder="Password" 
-            value={password} 
-            onChangeText={setPassword} 
-            style={styles.input} 
-            secureTextEntry={!showPassword}
-          />
-                  
+        <TextInput placeholder="Email" style={styles.input} value={email}  onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+        <TextInput value={password} onChangeText={setPassword} placeholder="Password" style={styles.input} secureTextEntry={!showPassword}/>
+        
         <TouchableOpacity style={{bottom: 82, left: 320}} >
           <Icon name={showPassword ? "eye-off" : "eye"} size={24} color="white" onPress={toggleShowPassword}/>
         </TouchableOpacity>
-          <Link href= "/register"  style={styles.link}>
-            <Text>
-              Don't have an account?
-            </Text>
-        </Link>
-          {/* Login Button */}
-          <TouchableOpacity onPress={handleLogin} style={styles.loginButton}>
-            <Text style={styles.buttonText}>Login</Text>
+
+        {/* Register Button */}
+        <TouchableOpacity onPress={handleRegister} style={styles.registerButton}>
+            <Text style={styles.buttonText}>Register</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -106,6 +90,17 @@ const styles = StyleSheet.create({
     textAlign:'center',
     alignSelf: 'center',
     flex: 1
+  },
+  registerButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#fff',
+    marginTop: 10,
+    width: 200,
+    alignItems: 'center'
   },
   buttonText: {
     color: "white",

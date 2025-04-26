@@ -1,20 +1,19 @@
-import { ImageBackground, Text, View, StyleSheet, TouchableOpacity, Image, Dimensions } from "react-native";
+import { ImageBackground, View, StyleSheet, Image } from "react-native";
 import { Link } from "expo-router";
 import React from "react";
 
-const { width, height } = Dimensions.get('window');
-
 export default function Index() {
   return (
-    <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover"> 
+    <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover">
       <View style={styles.container}>
-        <Text>This is the index/landing page</Text>
-        <Link href = "/home_screen" style = {styles.button}>
-          Go Home
-        </Link>
-        <View style={styles.horizontalContainer}>
-          <Image style={styles.acatemyLogo} source={require("../assets/images/Acatemy Title Image.png")}/>
-          <Text style={styles.text}>This is the landing page!</Text>
+        <View style={styles.logoContainer}>
+          <Image
+            style={styles.acatemyLogo}
+            source={require("../assets/images/Acatemy Title Image.png")}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.buttonContainer}>
           <Link href="/login_screen" style={styles.loginButton}>
             Login
           </Link>
@@ -25,50 +24,59 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  image: {
     flex: 1,
+    width: "100%",
+    height: "100%",
     justifyContent: "center",
     alignItems: "center",
   },
-  image: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
+  container: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 40,
   },
-  button: {
-    fontSize: 20,
-    textDecorationLine: "underline",
-    color: "#000",
-  },
-  horizontalContainer: {
-    flexDirection: "column",
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    marginTop: '10%',  
+  logoContainer: {
+    width: "90%",
+    height: "32%", // Make the logo container taller
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 60,
   },
   acatemyLogo: {
-    flex: 1,
-    width: width * 0.25,   
-    height: height * 0.28,   
+    width: "100%",
+    height: "100%",
+  },
+  buttonContainer: {
+    width: "80%",
+    alignItems: "center",
+    justifyContent: "center",
   },
   loginButton: {
-    backgroundColor: '#B58392',
-    paddingVertical: '2%',  
-    paddingHorizontal: '5%',  
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 18,
+    backgroundColor: "#B58392",
+    paddingVertical: 14,
+    paddingHorizontal: 32,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: '#fff',
-    marginTop: '10%',  
+    borderColor: "#fff",
+    marginTop: 10,
+    textAlign: "center",
+    overflow: "hidden",
   },
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
   },
   text: {
-    marginTop: '10%',  
-    color: '#fff',
+    marginTop: 20,
+    color: "#fff",
   },
 });
