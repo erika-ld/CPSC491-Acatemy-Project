@@ -1,12 +1,7 @@
-import { ImageBackground, Text, View, StyleSheet, TouchableOpacity, Image, Dimensions, ScrollView } from "react-native";
+import { ImageBackground, Text, View, StyleSheet, TouchableOpacity, Image, ScrollView } from "react-native";
 import { Link } from "expo-router";
 import React, { useContext } from "react";
 import { TimerContext } from "./timerContext";
-//import { useNavigation } from '@react-navigation/native';
-
-//const navigation = useNavigation();
-
-const { width, height } = Dimensions.get('window');
 
 export default function Home() {
   console.log("Home Screen Loaded");
@@ -21,9 +16,9 @@ export default function Home() {
   };
 
   return (
-    <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover"> 
-      <View style={styles.container}>
-        <ScrollView>
+    <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover">
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.container}>
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.button}>
               <Link href="/to_do_list_screen" style={styles.link}>
@@ -48,13 +43,12 @@ export default function Home() {
             </TouchableOpacity>
           </View>
           <View style={styles.horizontalContainer}>
-            <Image style={styles.acatemyLogo} source={require("../assets/images/Acatemy Title Image Home.png")}/>
+            <Image style={styles.acatemyLogo} source={require("../assets/images/Acatemy Title Image Home.png")} resizeMode="contain" />
             <TouchableOpacity onPress={() => console.log('Navigate to pet_customization_screen')}>
               <Link href="/pet_customization_screen" style={styles.link}>
-                <Image style={styles.petImage} source={require("../assets/images/Cat Transparent Background.png")}/>
+                <Image style={styles.petImage} source={require("../assets/images/Cat Transparent Background.png")} resizeMode="contain" />
               </Link>
             </TouchableOpacity>
-            {/*Took this out <Image style={styles.petImage} source={require("../assets/images/Cat Transparent Background.png")}/> */}
             <Text style={styles.focusText}>✨Focus✨</Text>
             <TouchableOpacity style={styles.timerContainer}>
               <Link href="/timer_screen" style={styles.link}>
@@ -62,42 +56,50 @@ export default function Home() {
               </Link>
             </TouchableOpacity>
           </View>
-        </ScrollView>
-      </View>
+        </View>
+      </ScrollView>
     </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "flex-start",
-    alignItems: "center",
-  },
   image: {
+    flex: 1,
     width: '100%',
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: "flex-start", // <-- changed from "center"
+    alignItems: "center",
+    paddingVertical: 20,
+  },
+  container: {
+    flex: 1,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "flex-start", // <-- changed from "center"
+  },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: '100%',
-    paddingHorizontal: '6%',  
-    marginTop: '5%',  
+    width: '60%',
+    paddingHorizontal: 5,
+    marginBottom: 20,
   },
   button: {
     flex: 1,
     backgroundColor: '#B58392',
-    paddingVertical: '2%',  
-    paddingHorizontal: '3%',  
+    paddingVertical: 10,
+    marginHorizontal: 8,
     borderRadius: 5,
     borderWidth: 1,
     borderColor: '#fff',
-    marginHorizontal: '2%',  
-    display: 'flex'
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   link: {
     flex: 1,
@@ -105,52 +107,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   horizontalContainer: {
+    flex: 1,
     flexDirection: "column",
-    justifyContent: 'space-evenly',
+    justifyContent: 'space-evenly', 
     alignItems: 'center',
-    marginTop: '10%',  
+    width: "100%",
+    marginTop: 16,
+    marginBottom: 16, // add some bottom margin if needed
   },
   acatemyLogo: {
-    flex: 1,
-    width: width * 0.25,   
-    height: height * 0.28,   
+    width: "80%",
+    height: undefined,
+    aspectRatio: 3.5,
+    marginVertical: 10,
   },
   petImage: {
-    flex: 1,
-    width: width * 0.15,   
-    height: height * 0.20, 
-    marginTop: '2%',  
+    width: 120,
+    height: 120,
+    marginVertical: 10,
   },
   focusText: {
     color: '#fff',
     fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: '7%',
+    marginVertical: 2,
   },
   timerContainer: {
-    marginTop: '2%',  
+    marginTop: 2,
     backgroundColor: '#B58392',
     paddingVertical: 15,
     paddingHorizontal: 50,
     borderRadius: 5,
     borderWidth: 1,
     borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   timerText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
-  },
-  loginButton: {
-    backgroundColor: '#B58392',
-    paddingVertical: '2%',  
-    paddingHorizontal: '5%',  
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#fff',
-    marginTop: '10%',  
   },
   buttonText: {
     color: '#fff',
@@ -159,7 +157,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   text: {
-    marginTop: '10%',  
+    marginTop: 20,
     color: '#fff',
   },
 });
