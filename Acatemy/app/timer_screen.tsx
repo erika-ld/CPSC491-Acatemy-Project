@@ -6,6 +6,7 @@ import { TimerContext } from './timerContext';
 import { useCoins } from './coinsContext';
 import { AppState } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { ScrollView } from 'react-native';
 
 export default function TimerScreen() {
   const { timer, startTimer, pauseTimer, resumeTimer, resetTimer, isRunning, isPaused } = useContext(TimerContext);
@@ -221,6 +222,8 @@ export default function TimerScreen() {
 
   return (
     <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover">
+          <View style={styles.safeContainer}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         <Text style={styles.title}>Focus Timer</Text>
         <Text style={styles.coinsText}>Coins Collected Today: {dailyCoins} 🪙</Text>
@@ -276,6 +279,8 @@ export default function TimerScreen() {
           </TouchableOpacity>
         </View>
       </View>
+      </ScrollView>
+      </View>
     </ImageBackground>
   );
 }
@@ -289,12 +294,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   container: {
-    flex: 1,
-    justifyContent: "flex-start",
-    alignItems: "center",
-    paddingTop: 40,
-    paddingHorizontal: 20,
     width: "100%",
+    maxWidth: 2000, // <- Keeps things centered and readable on web
+    alignItems: "center"
+  },
+  safeContainer: {
+    flex: 1,
+    width: "100%",
+  },
+  scrollContainer: {
+    flexGrow: 1,
+  justifyContent: "center",
+  alignItems: "center",
+  paddingVertical: 30,
+  paddingHorizontal: 20,
   },
   title: {
     fontSize: 24,
@@ -402,8 +415,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginTop: 20,
-    width: "25%",
-    paddingHorizontal: 30,
+    width: "25%", // take full width
+    paddingHorizontal: 20,
+    gap: 10, // optional, adds space between buttons
+    flexWrap: 'wrap', // allows wrapping if needed
   },
   startButton: {
     backgroundColor: "#B58392",
