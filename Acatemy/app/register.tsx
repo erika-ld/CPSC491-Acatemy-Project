@@ -1,9 +1,10 @@
 import { ImageBackground, Text, View, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert } from "react-native";
-import { Link, useRouter } from "expo-router";
 import React, { useState } from "react";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { auth } from "../firebase"; // Import Firebase auth instance
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth"; // Import functions properly
+import { createUserWithEmailAndPassword } from "firebase/auth"; // Import functions properly
+import { db } from "../firebase";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 export default function Login() {
   console.log("Register Screen Loaded");
@@ -11,27 +12,63 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [username, setUsername] = useState("");
+  
 
   const toggleShowPassword = () => {
     setShowPassword(!showPassword);
   };
 
 // Register User
-  const handleRegister = async () => {
-    setError("");
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      alert("Account Created! You can now log in.");
-    } catch (err) {
-      setError((err as Error).message);
+const handleRegister = async () => {
+  setError("");
+
+  if (!username) {
+    setError("Username is required");
+    return;
+  }
+
+  try {
+    const usernameRef = doc(db, "usernames", username);
+    const existing = await getDoc(usernameRef);
+
+    if (existing.exists()) {
+      setError("Username already taken");
+      return;
     }
-  };
+
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Save user details
+    await setDoc(doc(db, "users", user.uid), {
+      email: user.email,
+      username,
+      coins: 0,
+    });
+
+    // Map username → email
+    await setDoc(usernameRef, {
+      uid: user.uid,
+      email: user.email,
+    });
+
+    alert("Account Created! You can now log in.");
+    window.location.href = '/login_screen'; // Adjust if using navigation
+
+  } catch (err) {
+    setError((err as Error).message);
+  }
+};
+
 
   return (
     <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover"> 
       <View style={styles.container}>
         <ScrollView>
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        
+        <TextInput placeholder="Username" style={styles.input} value={username} onChangeText={setUsername} autoCapitalize="none" />
 
         <TextInput placeholder="Email" style={styles.input} value={email}  onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
         <TextInput value={password} onChangeText={setPassword} placeholder="Password" style={styles.input} secureTextEntry={!showPassword}/>
@@ -76,7 +113,7 @@ const styles = StyleSheet.create({
     marginBottom: 50
   },
 
-  loginButton: {
+  registerButton: {
     backgroundColor: '#B58392',
     paddingVertical: 10,
     paddingHorizontal: 20,
@@ -91,17 +128,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     flex: 1
   },
-  registerButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#fff',
-    marginTop: 10,
-    width: 200,
-    alignItems: 'center'
-  },
+
   buttonText: {
     color: "white",
     fontSize: 18
