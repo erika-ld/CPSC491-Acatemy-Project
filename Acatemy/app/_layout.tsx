@@ -1,6 +1,6 @@
 import { Drawer } from 'expo-router/drawer';
-import { TimerProvider } from "./timerContext";
-import { CoinsProvider } from "./coinsContext";
+import { TimerProvider } from "../components/timerContext";
+import { CoinsProvider } from "../components/coinsContext";
 
 export default function RootLayout() {
   return (

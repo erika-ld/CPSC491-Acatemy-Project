@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, ImageBac
 import { auth, db } from "../firebase";
 import { Link } from "expo-router";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
-import TaskItem from "./taskitem";
+import TaskItem from "../components/taskitem";
 
 interface Task {
   id: string;

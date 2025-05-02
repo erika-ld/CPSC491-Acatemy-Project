@@ -5,15 +5,18 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { auth } from "../firebase"; // Import Firebase auth instance
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
 import type { User } from "firebase/auth"; // Add this import
+import { db } from "../firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 
 export default function Login() {
   console.log("Login Screen Loaded");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [user, setUser] = useState<User | null>(null);
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -29,11 +32,20 @@ export default function Login() {
   // Login User
   const handleLogin = async () => {
     setError("");
+  
     try {
+      const usernameDoc = await getDoc(doc(db, "usernames", username));
+      if (!usernameDoc.exists()) {
+        setError("Username not found");
+        return;
+      }
+  
+      const email = usernameDoc.data().email;
+  
       await signInWithEmailAndPassword(auth, email, password);
       alert("Login Successful!");
-      window.location.href = '/home_screen'; // Adjust path as needed
-
+      window.location.href = '/home_screen';
+  
     } catch (err) {
       setError((err as Error).message);
     }
@@ -58,11 +70,11 @@ export default function Login() {
         {!user && (
             <>
               <TextInput
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                style={styles.input}
-                autoCapitalize="none"
+              placeholder="Username"
+              value={username}
+              onChangeText={setUsername}
+              style={styles.input}
+               autoCapitalize="none"
               />
               <TextInput
                 placeholder="Password"

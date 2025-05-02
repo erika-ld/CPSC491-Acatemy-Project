@@ -1,6 +1,6 @@
 import { ImageBackground, Text, View, StyleSheet, FlatList, Modal, TouchableOpacity } from "react-native";
 import React, { useState } from "react";
-import { useCoins } from './coinsContext'; // Import the CoinsContext
+import { useCoins } from '../components/coinsContext'; // Import the CoinsContext
 
 export default function Rewards() {
   const { coins, addCoins } = useCoins(); // Access the global coin count and addCoins function

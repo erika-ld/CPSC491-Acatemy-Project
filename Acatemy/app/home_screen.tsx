@@ -1,7 +1,7 @@
 import { ImageBackground, Text, View, StyleSheet, TouchableOpacity, Image, ScrollView } from "react-native";
 import { Link } from "expo-router";
 import React, { useContext } from "react";
-import { TimerContext } from "./timerContext";
+import { TimerContext } from "../components/timerContext";
 
 export default function Home() {
   console.log("Home Screen Loaded");
