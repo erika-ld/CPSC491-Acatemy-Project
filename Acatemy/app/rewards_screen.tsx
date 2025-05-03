@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { ImageBackground, Text, View, StyleSheet, FlatList, Modal, TouchableOpacity, Image } from "react-native";
+import { useCoins } from "../components/coinsContext";
 
 export default function Rewards() {
-  const [coins, setCoins] = useState(0);
+  const { coins, setCoins } = useCoins(); // <-- Use global coins context
   const [selectedPet, setSelectedPet] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [purchasedItems, setPurchasedItems] = useState([]);

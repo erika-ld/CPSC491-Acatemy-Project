@@ -7,6 +7,7 @@ import { useCoins } from '../components/coinsContext';
 import { AppState } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { ScrollView } from 'react-native';
+import * as Speech from 'expo-speech';  
 
 export default function TimerScreen() {
   const { timer, startTimer, pauseTimer, resumeTimer, resetTimer, isRunning, isPaused } = useContext(TimerContext);
@@ -121,7 +122,10 @@ export default function TimerScreen() {
         return newCoins;
       });
       setLastCoinTime(0);
-      setLastMinuteCounted(true);
+      setLastMinuteCounted(true)
+      Speech.speak("Timer complete! Great job focusing!", {
+        voice: "Microsoft Zira - English (United States) (Microsoft Zira - English (United States))",
+      });
     }
   }, [timer, lastMinuteCounted, lastCoinTime]);
 
