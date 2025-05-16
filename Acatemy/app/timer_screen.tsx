@@ -214,7 +214,7 @@ export default function TimerScreen() {
         <View style={styles.petImageContainer}>
           <Image
             style={styles.petImage}
-            source={require("../assets/images/Cat Transparent Background.png")}
+            source={require("../assets/images/cat.png")}
             resizeMode="contain"
           />
         </View>
