@@ -25,7 +25,8 @@ Acatemy is a mobile app that helps you stay focused and motivated by giving you 
 ---
 ## Getting Started
 - git clone https://github.com/erika-ld/CPSC491-Acatemy-Project.git
-- cd acatemy
+- cd CPSC491-Acatemy-Project
+- cd Acatemy
 - install node.js
 - npm install -g expo-cli 
 - npm install
