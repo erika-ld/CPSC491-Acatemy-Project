@@ -2,11 +2,12 @@ import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { ImageBackground, Text, View, StyleSheet, TouchableOpacity, TextInput, Alert, Image, ActivityIndicator } from 'react-native';
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db, auth } from '../firebase';
-import { TimerContext } from './timerContext';
-import { useCoins } from './coinsContext';
+import { TimerContext } from '../components/timerContext';
+import { useCoins } from '../components/coinsContext';
 import { AppState } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { ScrollView } from 'react-native';
+import * as Speech from 'expo-speech';  
 
 export default function TimerScreen() {
   const { timer, startTimer, pauseTimer, resumeTimer, resetTimer, isRunning, isPaused } = useContext(TimerContext);
@@ -26,7 +27,7 @@ export default function TimerScreen() {
       if (user) {
         setUserId(user.uid);
       } else {
-        setUserId("guest_user");
+        setUserId(null); // null instead of "guest_user"
       }
       setIsLoading(false);
     };
@@ -36,8 +37,9 @@ export default function TimerScreen() {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         setUserId(user.uid);
+        fetchAndSyncCoins(); // fetch coins on login
       } else {
-        setUserId("guest_user");
+        setUserId(null);
       }
       setIsLoading(false);
     });
@@ -60,35 +62,14 @@ export default function TimerScreen() {
 
   // Fetch and sync coins from Firestore to local and global state
   const fetchAndSyncCoins = async () => {
-    if (!userId) return;
+    if (!userId || userId === "guest_user") return;
     try {
       const userDoc = doc(db, "users", userId);
       const docSnap = await getDoc(userDoc);
       if (docSnap.exists()) {
         const data = docSnap.data();
-        const currentTime = Date.now();
-        const lastResetTime = data.lastResetTime?.toMillis ? data.lastResetTime.toMillis() : 0;
-        const hoursSinceLastReset = (currentTime - lastResetTime) / (1000 * 60 * 60);
-        if (hoursSinceLastReset >= 24) {
-          setDailyCoins(0);
-          setCoins(0);
-          await setDoc(userDoc, {
-            dailyCoins: 0,
-            lastResetTime: serverTimestamp(),
-            lastUpdated: serverTimestamp()
-          }, { merge: true });
-        } else {
-          setDailyCoins(data.dailyCoins || 0);
-          setCoins(data.dailyCoins || 0);
-        }
-      } else {
-        await setDoc(userDoc, {
-          dailyCoins: 0,
-          lastResetTime: serverTimestamp(),
-          lastUpdated: serverTimestamp()
-        });
-        setDailyCoins(0);
-        setCoins(0);
+        setDailyCoins(data.dailyCoins || 0);
+        setCoins(data.dailyCoins || 0);
       }
     } catch (error) {
       console.error('Failed to load coins data:', error);
@@ -98,7 +79,7 @@ export default function TimerScreen() {
 
   // Save daily coins to Firestore
   const saveDailyCoins = async (coinsValue: number) => {
-    if (!userId) return;
+    if (!userId || userId === "guest_user") return;
     try {
       const userDoc = doc(db, "users", userId);
       await setDoc(userDoc, {
@@ -141,7 +122,10 @@ export default function TimerScreen() {
         return newCoins;
       });
       setLastCoinTime(0);
-      setLastMinuteCounted(true);
+      setLastMinuteCounted(true)
+      Speech.speak("Timer complete! Great job focusing!", {
+        voice: "Microsoft Zira - English (United States) (Microsoft Zira - English (United States))",
+      });
     }
   }, [timer, lastMinuteCounted, lastCoinTime]);
 

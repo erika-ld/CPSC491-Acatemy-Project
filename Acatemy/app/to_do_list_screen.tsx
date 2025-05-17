@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, ImageBackground, ActivityIndicator } from "react-native";
 import { auth, db } from "../firebase";
-import { Link } from "expo-router";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 import TaskItem from "./taskitem";
+import { useCoins } from "../components/coinsContext";
+import { useFocusEffect } from '@react-navigation/native';
+
+
 
 interface Task {
   id: string;
@@ -17,57 +20,26 @@ const ToDoScreen: React.FC = () => {
   const [newTask, setNewTask] = useState<string>("");
   const [date, setDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-  const [coins, setCoins] = useState<number>(0);
+  const { coins, addCoins, updateCoins } = useCoins(); // 👈 use context
   const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) {
-      console.log("No user authenticated.");
-      setLoading(false);
-      return;
-    }
-
-    const userRef = doc(db, "users", user.uid);
-
-    // Fetch user data from Firestore
-    const loadUserData = async () => {
-      try {
-        const docSnap = await getDoc(userRef);
-
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          if (data && data.coins !== undefined) {
-            setCoins(data.coins);
-          } else {
-            setCoins(0);
-            await setDoc(userRef, { coins: 0 }, { merge: true });
-          }
-        } else {
-          setCoins(0);
-          await setDoc(userRef, { coins: 0 });
-        }
-      } catch (error) {
-        console.error("Error loading user data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUserData();
-
-    // Subscribe to Firestore updates
-    const unsubscribe = onSnapshot(userRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data && data.coins !== undefined) {
-          setCoins(data.coins);
-        }
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
+  
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true;
+  
+      const loadCoinsOnFocus = async () => {
+        setLoading(true);
+        await updateCoins();
+        if (isActive) setLoading(false);
+      };
+  
+      loadCoinsOnFocus();
+  
+      return () => {
+        isActive = false; // Prevent setting state on unmounted screen
+      };
+    }, [])
+  );
 
   const saveCoins = async (uid: string, newCoinAmount: number) => {
     try {
@@ -95,7 +67,7 @@ const ToDoScreen: React.FC = () => {
     const updatedTasks = tasks.map(task => {
       if (task.id === id && !task.completed) {
         const newCoinAmount = coins + 10;
-        setCoins(newCoinAmount);
+        addCoins(10);
         saveCoins(user.uid, newCoinAmount);
         return { ...task, completed: true };
       } else if (task.id === id && task.completed) {

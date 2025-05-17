@@ -1,264 +1,246 @@
-import React, { useState, useEffect } from 'react';
-import { Text, View, StyleSheet, SafeAreaView, ImageBackground, TouchableOpacity, Dimensions, Image } from 'react-native';
+import React, { useState } from 'react';
+import {
+ Text, View, StyleSheet, SafeAreaView, ImageBackground,
+ TouchableOpacity, Image
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { usePet } from '../components/petContext'; 
+
 
 export default function Pet_Customization_Screen() {
-  console.log("Pet Customizer Screen Loaded");
+ const navigation = useNavigation();
+ const { selectedPet } = usePet(); 
+ const actualPet = selectedPet ?? 'cat';
 
-  // Get screen dimensions
-  const { width, height } = Dimensions.get('window');
 
-  // State to store screen dimensions for reactivity
-  const [screenWidth, setScreenWidth] = useState(width);
-  const [screenHeight, setScreenHeight] = useState(height);
+ // Base pet image depending on selected pet
+ const basePetImage = actualPet === 'dog'
+   ? require('../assets/images/dog.png')
+   : actualPet === 'plant'
+   ? require('../assets/images/plant.png')
+   : require('../assets/images/cat.png');
 
-  // State to control visibility of the dropdowns
-  const [isAccessoriesDropdownVisible, setIsAccessoriesDropdownVisible] = useState(false);
-  const [isCurrentPetDropdownVisible, setIsCurrentPetDropdownVisible] = useState(false);
 
-  // Use the navigation hook to navigate
-  const navigation = useNavigation();
+ // Accessory options based on pet
+ const accessoryOptions = [
+   {
+     name: 'None',
+     image: basePetImage,
+     icon: 'None'
+   },
+   {
+     name: 'Hat',
+     image: actualPet === 'dog'
+       ? require('../assets/images/dog-hat.png')
+       : actualPet === 'plant'
+       ? require('../assets/images/plant-hat.png')
+       : require('../assets/images/cat-hat.png'),
+     icon: require('../assets/images/HAT.png')
+   },
+   {
+     name: 'Bow',
+     image: actualPet === 'dog'
+       ? require('../assets/images/dog-bow.png')
+       : actualPet === 'plant'
+       ? require('../assets/images/plant-bow.png')
+       : require('../assets/images/cat-bow.png'),
+     icon: require('../assets/images/BOW.png')
+   },
+   {
+     name: 'Teddy',
+     image: actualPet === 'dog'
+       ? require('../assets/images/dog-bear.png')
+       : actualPet === 'plant'
+       ? require('../assets/images/plant-bear.png')
+       : require('../assets/images/cat-bear.png'),
+     icon: require('../assets/images/TEDDY.png')
+   },
+   {
+     name: 'Cupcake',
+     image: actualPet === 'dog'
+       ? require('../assets/images/dog-treat.png')
+       : actualPet === 'plant'
+       ? require('../assets/images/plant-treat.png')
+       : require('../assets/images/cat-treat.png'),
+     icon: require('../assets/images/CUPCAKE.png')
+   },
+ ];
 
-  // Update dimensions when the window is resized
-  useEffect(() => {
-    const onResize = () => {
-      const { width, height } = Dimensions.get('window');
-      setScreenWidth(width);
-      setScreenHeight(height);
-    };
 
-    // Add event listener for screen resizing
-    const listener = Dimensions.addEventListener('change', onResize);
+ const [currentIndex, setCurrentIndex] = useState(0);
 
-    // Cleanup the listener on component unmount
-    return () => {
-      listener?.remove();
-    };
-  }, []);
 
-  const handleCancel = () => {
-    console.log('Cancel Button Pressed');
-  };
+ const next = () => setCurrentIndex((prev) => (prev + 1) % accessoryOptions.length);
+ const prev = () => setCurrentIndex((prev) => (prev - 1 + accessoryOptions.length) % accessoryOptions.length);
 
-  const handleSave = () => {
-    console.log('Save Button Pressed');
-  };
 
-  const handleBack = () => {
-    console.log('Back Button Pressed');
-    navigation.goBack();  // This will navigate to the previous screen
-  };
+ return (
+   <SafeAreaView style={styles.container}>
+     <ImageBackground
+       source={require('../assets/images/Background.png')}
+       style={styles.backgroundImage}
+       resizeMode="cover"
+     >
+       {/* Title */}
+       <Text style={styles.title}>✧ 𝑷𝒆𝒕 𝑪𝒖𝒔𝒕𝒐𝒎𝒊𝒛𝒆𝒓✧</Text>
 
-  const handleAccessoriesPress = () => {
-    setIsAccessoriesDropdownVisible(!isAccessoriesDropdownVisible);
-    if (isCurrentPetDropdownVisible) {
-      setIsCurrentPetDropdownVisible(false);
-    }
-  };
 
-  const handleCurrentPetPress = () => {
-    setIsCurrentPetDropdownVisible(!isCurrentPetDropdownVisible);
-    if (isAccessoriesDropdownVisible) {
-      setIsAccessoriesDropdownVisible(false);
-    }
-  };
+       {/* Pet with selected accessory */}
+       <Image
+         source={accessoryOptions[currentIndex].image}
+         style={styles.catImage}
+       />
 
-  // Calculate dropdown left position based on screen width
-  const accessoriesDropdownLeft = screenWidth * 0.12; // 12% of screen width
-  const currentPetDropdownLeft = screenWidth * 0.50; // 50% of screen width (adjust based on needs)
 
-  return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <ImageBackground
-        source={require('../assets/images/Background.png')}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Image source={require('../assets/images/Back Button.png')} style={styles.backImage} />
-        </TouchableOpacity>
+       {/* Arrow Controls */}
+       <View style={styles.arrowContainer}>
+         <TouchableOpacity onPress={prev} style={styles.arrowButton}>
+           <Text style={styles.arrowText}>{"<"}</Text>
+         </TouchableOpacity>
 
-        <Text style={styles.title}>ℙ𝕖𝕥 ℂ𝕦𝕤𝕥𝕠𝕞𝕚𝕫𝕖𝕣</Text>
 
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-            <Text style={styles.buttonText}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.buttonText}>Save</Text>
-          </TouchableOpacity>
-        </View>
+         {/* Accessory Preview in Middle */}
+         {accessoryOptions[currentIndex].name === 'None' ? (
+           <Text style={styles.noneText}>None</Text>
+         ) : (
+           <Image
+             source={accessoryOptions[currentIndex].icon}
+             style={styles.accessoryPreviewIcon}
+           />
+         )}
 
-        <View style={styles.sideBySideButtonsContainer}>
-          <TouchableOpacity style={styles.accessoriesButton} onPress={handleAccessoriesPress}>
-            <Text style={styles.buttonText}>Accessories</Text>
-          </TouchableOpacity>
 
-          <TouchableOpacity style={styles.currentPetButton} onPress={handleCurrentPetPress}>
-            <Text style={styles.buttonText}>Current Pet View</Text>
-          </TouchableOpacity>
-        </View>
+         <TouchableOpacity onPress={next} style={styles.arrowButton}>
+           <Text style={styles.arrowText}>{">"}</Text>
+         </TouchableOpacity>
+       </View>
 
-        {/* Dropdowns side-by-side */}
-        <View style={[styles.dropdownContainer, { top: screenHeight * 0.264 }]}>
-          {isAccessoriesDropdownVisible && (
-            <View style={[styles.dropdown, { left: accessoriesDropdownLeft }]}>
-              <TouchableOpacity style={styles.dropdownItem}>
-                <Text style={styles.dropdownText}>Option 1</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.dropdownItem}>
-                <Text style={styles.dropdownText}>Option 2</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.dropdownItem}>
-                <Text style={styles.dropdownText}>Option 3</Text>
-              </TouchableOpacity>
-            </View>
-          )}
 
-          {isCurrentPetDropdownVisible && (
-            <View style={[styles.dropdown, { left: currentPetDropdownLeft }]}>
-              <TouchableOpacity style={styles.dropdownItem}>
-                <Text style={styles.dropdownText}>Option 4</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.dropdownItem}>
-                <Text style={styles.dropdownText}>Option 5</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.dropdownItem}>
-                <Text style={styles.dropdownText}>Option 6</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
+       {/* Save & Cancel Buttons */}
+       <View style={styles.saveCancelButtonRow}>
+         <TouchableOpacity style={styles.cancelButton}>
+           <Text style={styles.buttonText}>Cancel</Text>
+         </TouchableOpacity>
 
-        {/* Cat Transparent Image in the middle */}
-        <Image
-          source={require('../assets/images/Cat Transparent Background.png')}
-          style={styles.catImage}
-        />
-      </ImageBackground>
-    </SafeAreaView>
-  );
+
+         <TouchableOpacity style={styles.saveButton}>
+           <Text style={styles.buttonText}>Save</Text>
+         </TouchableOpacity>
+       </View>
+
+
+     </ImageBackground>
+   </SafeAreaView>
+ );
 }
 
+
 const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-  },
-  title: {
-    width: '100%',
-    height: 80,
-    textAlign: 'center',
-    color: 'white',
-    fontSize: 48,
-    fontFamily: 'Roboto',
-    fontWeight: '400',
-    lineHeight: 56,
-    textShadowColor: 'rgba(0, 0, 0, 0.25)',
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 4,
-    position: 'absolute',
-    top: 50,
-  },
-  buttonsContainer: {
-    position: 'absolute',
-    bottom: 120,
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 150,
-  },
-  cancelButton: {
-    backgroundColor: 'red',
-    paddingVertical: 10,
-    paddingHorizontal: 50,
-    borderRadius: 25,
-  },
-  saveButton: {
-    backgroundColor: 'green',
-    paddingVertical: 10,
-    paddingHorizontal: 50,
-    borderRadius: 25,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    zIndex: 1,
-  },
-  backImage: {
-    width: 80,
-    height: 80,
-    resizeMode: 'contain',
-  },
-  sideBySideButtonsContainer: {
-    position: 'absolute',
-    bottom: 620,
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 150,
-  },
-  accessoriesButton: {
-    width: 200,
-    paddingVertical: 10,
-    backgroundColor: 'pink',
-    borderWidth: 2,
-    borderColor: 'black',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 0,
-  },
-  currentPetButton: {
-    width: 200,
-    paddingVertical: 10,
-    backgroundColor: 'lightblue',
-    borderWidth: 2,
-    borderColor: 'black',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 0,
-  },
-  dropdownContainer: {
-    position: 'absolute',
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20, // Ensures dropdowns are spaced apart
-  },
-  dropdown: {
-    backgroundColor: 'rgba(207, 150, 187, 0.9)',
-    borderRadius: 0,
-    paddingVertical: 10,
-    borderWidth: 2,
-    borderColor: 'black',
-    width: 200,
-  },
-  dropdownItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-  },
-  dropdownText: {
-    color: 'white',
-    fontSize: 18,
-    textAlign: 'center',
-  },
-  catImage: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [
-      { translateX: -175 }, 
-      { translateY: -145 }, 
-    ],
-    width: 350,
-    height: 350,
-    resizeMode: 'contain',
-  },
+ container: { flex: 1 },
+ backgroundImage: { flex: 1, width: '100%', height: '100%' },
+
+
+ title: {
+   position: 'absolute',
+   top: '12%',
+   left: '50%',
+   transform: [{ translateX: -140 }],
+   fontSize: 36,
+   fontWeight: '400',
+   color: 'white',
+   textAlign: 'center',
+   width: 300,
+ },
+
+
+ catImage: {
+   position: 'absolute',
+   top: '42%',
+   left: '50%',
+   transform: [{ translateX: -125 }],
+   width: 250,
+   height: 250,
+   resizeMode: 'contain',
+ },
+
+
+ arrowContainer: {
+   position: 'absolute',
+   top: '26%',
+   flexDirection: 'row',
+   width: '100%',
+   justifyContent: 'center',
+   alignItems: 'center',
+   paddingHorizontal: 30,
+   gap: 40,
+   height: 120,
+ },
+
+
+ arrowButton: {
+   backgroundColor: 'pink',
+   padding: 22,
+   borderRadius: 40,
+   borderWidth: 3,
+   borderColor: 'black',
+ },
+
+
+ arrowText: {
+   fontSize: 36,
+   color: 'white',
+   fontWeight: 'bold',
+ },
+
+
+ accessoryPreviewIcon: {
+   width: 120,
+   height: 120,
+   resizeMode: 'contain',
+ },
+
+
+ noneText: {
+   fontSize: 24,
+   fontWeight: 'bold',
+   color: 'white',
+   textAlign: 'center',
+   width: 120,
+ },
+
+
+ saveCancelButtonRow: {
+   position: 'absolute',
+   top: '85%',
+   width: '100%',
+   flexDirection: 'row',
+   justifyContent: 'center',
+   alignItems: 'center',
+ },
+
+
+ cancelButton: {
+   backgroundColor: 'red',
+   paddingVertical: 10,
+   paddingHorizontal: 20,
+   borderRadius: 20,
+   marginHorizontal: 50,
+ },
+
+
+ saveButton: {
+   backgroundColor: 'green',
+   paddingVertical: 10,
+   paddingHorizontal: 28,
+   borderRadius: 20,
+   marginHorizontal: 50,
+ },
+
+
+ buttonText: {
+   color: 'white',
+   fontSize: 19,
+   fontWeight: 'bold',
+   textAlign: 'center',
+ },
 });

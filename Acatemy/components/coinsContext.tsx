@@ -35,9 +35,9 @@ export const CoinsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const docSnap = await getDoc(userDoc);
         if (docSnap.exists()) {
           const data = docSnap.data();
-          if (data.totalCoins !== undefined) {
-            setCoins(data.totalCoins);
-            console.log(`Updated global coins state to ${data.totalCoins}`);
+          if (data.coins !== undefined) {
+            setCoins(data.coins);
+            console.log(`Updated global coins state to ${data.coins}`);
           }
         }
       }
