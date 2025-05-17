@@ -1,0 +1,72 @@
+import React from 'react';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import TimerScreen from './timer_screen';
+import RewardsScreen from './rewards_screen';
+import HomeScreen from './home_screen';
+import LandingPage from './index';
+import LoginScreen from './login_screen';
+import PetCustomizerScreen from './pet_customization_screen'; 
+import PetMakerScreen from './pet_maker_screen';
+import RegisterScreen from './register';  
+import ToDoListScreen from './to_do_list_screen';
+
+// import other screens as needed
+
+const Drawer = createDrawerNavigator();
+
+export default function DrawerNavigator() {
+  return (
+    <Drawer.Navigator
+      screenOptions={{
+        headerShown: true, 
+        drawerLabelStyle: { fontSize: 18 }, // Optional: style for drawer labels
+      }}
+    >
+      <Drawer.Screen
+        name="Landing Page"
+        component={LandingPage}
+        options={{ drawerLabel: "Welcome" }} // Custom sidebar name
+      />
+      <Drawer.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ drawerLabel: "Home" }} // Custom sidebar name
+      />
+      <Drawer.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{ drawerLabel: "Login" }} // Custom sidebar name
+      />
+      <Drawer.Screen
+        name="PetCustomizer"
+        component={PetCustomizerScreen}
+        options={{ drawerLabel: "Customize Pet" }} // Custom sidebar name
+      />
+      <Drawer.Screen
+        name="PetMaker"
+        component={PetMakerScreen}
+        options={{ drawerLabel: "Create Pet" }} // Custom sidebar name
+      />
+      <Drawer.Screen
+        name="Register"
+        component={RegisterScreen}
+        options={{ drawerLabel: "Sign Up" }} // Custom sidebar name
+      />
+      <Drawer.Screen
+        name="Rewards"
+        component={RewardsScreen}
+        options={{ drawerLabel: "My Rewards" }} // Custom sidebar name
+      />
+      <Drawer.Screen
+        name="Timer"
+        component={TimerScreen}
+        options={{ drawerLabel: "Focus Timer" }} // Custom sidebar name
+      />
+      <Drawer.Screen
+        name="ToDoList"
+        component={ToDoListScreen}
+        options={{ drawerLabel: "To-Do List" }} // Custom sidebar name
+      />
+    </Drawer.Navigator>
+  );
+}
