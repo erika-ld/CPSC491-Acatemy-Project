@@ -1,39 +1,32 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { Drawer } from 'expo-router/drawer';
+import { TimerProvider } from  '../components/timerContext';
+import { CoinsProvider } from  '../components/coinsContext';
+import { PetProvider } from "../components/petContext"; // ← ADD THIS
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+ return (
+   <CoinsProvider>
+     <TimerProvider>
+       <PetProvider>
+         <Drawer
+           screenOptions={{
+             headerShown: true,
+             drawerLabelStyle: { fontSize: 18 },
+           }}
+         >
+           <Drawer.Screen name="index" options={{ drawerLabel: "Welcome" }} />
+           <Drawer.Screen name="home_screen" options={{ drawerLabel: "Home" }} />
+           <Drawer.Screen name="login_screen" options={{ drawerLabel: "Login" }} />
+           <Drawer.Screen name="pet_customization_screen" options={{ drawerLabel: "Customize Pet" }} />
+           <Drawer.Screen name="pet_maker_screen" options={{ drawerLabel: "Create Pet" }} />
+           <Drawer.Screen name="register" options={{ drawerLabel: "Sign Up" }} />
+           <Drawer.Screen name="rewards_screen" options={{ drawerLabel: "My Rewards" }} />
+           <Drawer.Screen name="timer_screen" options={{ drawerLabel: "Focus Timer" }} />
+           <Drawer.Screen name="to_do_list_screen" options={{ drawerLabel: "To-Do List" }} />
+         </Drawer>
+       </PetProvider>
+     </TimerProvider>
+   </CoinsProvider>
+ );
 }
