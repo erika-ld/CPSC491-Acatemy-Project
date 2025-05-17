@@ -32,6 +32,6 @@ Acatemy is a mobile app that helps you stay focused and motivated by giving you 
 - npx expo start 
 ---
 ## Contributors
-- Erika Dickson, Jair De Orta, Krystal Anh Phan, Kelly Nguyen
+- Students: Erika Dickson, Jair De Orta, Krystal Anh Phan, Kelly Nguyen
 - Project for CPSC 491 @ California State University, Fullerton
 - Advisor: Dr. Lidia Morrison
