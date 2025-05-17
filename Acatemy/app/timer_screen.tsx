@@ -7,7 +7,7 @@ import { useCoins } from '../components/coinsContext';
 import { AppState } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { ScrollView } from 'react-native';
-import * as Speech from 'expo-speech';  
+import * as Speech from 'expo-speech';
 
 export default function TimerScreen() {
   const { timer, startTimer, pauseTimer, resumeTimer, resetTimer, isRunning, isPaused } = useContext(TimerContext);
@@ -19,6 +19,7 @@ export default function TimerScreen() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastMinuteCounted, setLastMinuteCounted] = useState(false);
+  const [wasCancelled, setWasCancelled] = useState(false);
 
   // Get authenticated user ID and load data
   useEffect(() => {
@@ -27,7 +28,7 @@ export default function TimerScreen() {
       if (user) {
         setUserId(user.uid);
       } else {
-        setUserId(null); // null instead of "guest_user"
+        setUserId(null);
       }
       setIsLoading(false);
     };
@@ -37,7 +38,7 @@ export default function TimerScreen() {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         setUserId(user.uid);
-        fetchAndSyncCoins(); // fetch coins on login
+        fetchAndSyncCoins();
       } else {
         setUserId(null);
       }
@@ -47,20 +48,17 @@ export default function TimerScreen() {
     return () => unsubscribe();
   }, []);
 
-  // Always fetch latest data from Firestore when screen is focused
   useFocusEffect(
     useCallback(() => {
       if (userId && !isLoading) {
         fetchAndSyncCoins();
       }
       return () => {
-        // Save coins when navigating away
         saveDailyCoins(dailyCoins);
       };
     }, [userId, isLoading])
   );
 
-  // Fetch and sync coins from Firestore to local and global state
   const fetchAndSyncCoins = async () => {
     if (!userId || userId === "guest_user") return;
     try {
@@ -77,7 +75,6 @@ export default function TimerScreen() {
     }
   };
 
-  // Save daily coins to Firestore
   const saveDailyCoins = async (coinsValue: number) => {
     if (!userId || userId === "guest_user") return;
     try {
@@ -91,7 +88,6 @@ export default function TimerScreen() {
     }
   };
 
-  // Award coins for every minute passed
   useEffect(() => {
     if (timer > 0 && lastCoinTime > 0) {
       const secondsPassed = lastCoinTime - timer;
@@ -106,15 +102,13 @@ export default function TimerScreen() {
         setLastCoinTime(timer - (secondsPassed % 60));
       }
     }
-    // Reset flags when timer is restarted
     if (timer > 0 && timer === lastCoinTime) {
       setLastMinuteCounted(false);
     }
   }, [timer]);
 
-  // Award coin for the last minute when timer completes
   useEffect(() => {
-    if (timer === 0 && !lastMinuteCounted && lastCoinTime > 0) {
+    if (timer === 0 && !lastMinuteCounted && lastCoinTime > 0 && !wasCancelled) {
       setDailyCoins(prev => {
         const newCoins = prev + 1;
         setCoins(newCoins);
@@ -127,9 +121,8 @@ export default function TimerScreen() {
         voice: "Microsoft Zira - English (United States) (Microsoft Zira - English (United States))",
       });
     }
-  }, [timer, lastMinuteCounted, lastCoinTime]);
+  }, [timer, lastMinuteCounted, lastCoinTime, wasCancelled]);
 
-  // Save coins when app goes to background
   useEffect(() => {
     const subscription = AppState.addEventListener('change', nextAppState => {
       if (nextAppState === 'background' || nextAppState === 'inactive') {
@@ -181,22 +174,26 @@ export default function TimerScreen() {
       const totalSeconds = (parseInt(hours, 10) || 0) * 3600 + (parseInt(minutes, 10) || 0) * 60;
       setLastCoinTime(totalSeconds);
       setLastMinuteCounted(false);
+      setWasCancelled(false);
       startTimer(totalSeconds);
     }
   };
 
+  // Only reset the timer, not the input boxes, and play audio on cancel
   const handleReset = () => {
-    setHours("");
-    setMinutes("");
     setLastCoinTime(0);
     setLastMinuteCounted(false);
+    setWasCancelled(true);
     resetTimer();
+    Speech.speak("Timer cancelled. Great effort!", {
+      voice: "Microsoft Zira - English (United States) (Microsoft Zira - English (United States))",
+    });
   };
 
   if (isLoading) {
     return (
       <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover">
-        <View style={[styles.container, {justifyContent: 'center'}]}>
+        <View style={[styles.container, { justifyContent: 'center' }]}>
           <ActivityIndicator size="large" color="#fff" />
           <Text style={styles.title}>Loading...</Text>
         </View>
@@ -206,64 +203,71 @@ export default function TimerScreen() {
 
   return (
     <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover">
-          <View style={styles.safeContainer}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Focus Timer</Text>
-        <Text style={styles.coinsText}>Coins Collected Today: {dailyCoins} 🪙</Text>
-        <View style={styles.petImageContainer}>
-          <Image
-            style={styles.petImage}
-            source={require("../assets/images/Cat Transparent Background.png")}
-            resizeMode="contain"
-          />
-        </View>
-        <Text style={styles.timerText}>{formatTime(timer)}</Text>
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapper}>
-            <TextInput
-              style={styles.input}
-              keyboardType="numeric"
-              placeholder="00"
-              placeholderTextColor="#fff"
-              value={hours}
-              onChangeText={handleHoursChange}
-            />
-            <Text style={styles.inputLabel}>Hours</Text>
+      <View style={styles.safeContainer}>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.container}>
+            <Text style={styles.title}>Focus Timer</Text>
+            <Text style={styles.coinsText}>Coins Collected Today: {dailyCoins} 🪙</Text>
+            <View style={styles.petImageContainer}>
+              <Image
+                style={styles.petImage}
+                source={require("../assets/images/cat.png")}
+                resizeMode="contain"
+              />
+            </View>
+            <Text style={styles.timerText}>{formatTime(timer)}</Text>
+            <View style={styles.inputContainer}>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  keyboardType="numeric"
+                  placeholder="00"
+                  placeholderTextColor="#fff"
+                  value={hours}
+                  onChangeText={handleHoursChange}
+                />
+                <Text style={styles.inputLabel}>Hours</Text>
+              </View>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  keyboardType="numeric"
+                  placeholder="00"
+                  placeholderTextColor="#fff"
+                  value={minutes}
+                  onChangeText={handleMinutesChange}
+                />
+                <Text style={styles.inputLabel}>Minutes</Text>
+              </View>
+            </View>
+            <View style={styles.lowerButtonContainer}>
+              <TouchableOpacity style={styles.pauseButton} onPress={pauseTimer} disabled={!isRunning || isPaused}>
+                <Text style={styles.buttonText}>Pause</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.resumeButton} onPress={resumeTimer} disabled={!isPaused}>
+                <Text style={styles.buttonText}>Resume</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.cancelButton} onPress={handleReset}>
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.startResetContainer}>
+              <TouchableOpacity style={styles.startButton} onPress={handleStartTimer}>
+                <Text style={styles.startText}>Start Timer</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.resetButton} onPress={() => {
+                setHours("");
+                setMinutes("");
+                setLastCoinTime(0);
+                setLastMinuteCounted(false);
+                setWasCancelled(true);
+                resetTimer();
+              }}>
+                <Text style={styles.resetText}>Reset Timer</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          <View style={styles.inputWrapper}>
-            <TextInput
-              style={styles.input}
-              keyboardType="numeric"
-              placeholder="00"
-              placeholderTextColor="#fff"
-              value={minutes}
-              onChangeText={handleMinutesChange}
-            />
-            <Text style={styles.inputLabel}>Minutes</Text>
-          </View>
-        </View>
-        <View style={styles.lowerButtonContainer}>
-          <TouchableOpacity style={styles.pauseButton} onPress={pauseTimer} disabled={!isRunning || isPaused}>
-            <Text style={styles.buttonText}>Pause</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.resumeButton} onPress={resumeTimer} disabled={!isPaused}>
-            <Text style={styles.buttonText}>Resume</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={resetTimer}>
-            <Text style={styles.buttonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.startResetContainer}>
-          <TouchableOpacity style={styles.startButton} onPress={handleStartTimer}>
-            <Text style={styles.startText}>Start Timer</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
-            <Text style={styles.resetText}>Reset Timer</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      </ScrollView>
+        </ScrollView>
       </View>
     </ImageBackground>
   );
@@ -279,7 +283,7 @@ const styles = StyleSheet.create({
   },
   container: {
     width: "100%",
-    maxWidth: 2000, // <- Keeps things centered and readable on web
+    maxWidth: 2000,
     alignItems: "center"
   },
   safeContainer: {
@@ -288,10 +292,10 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-  justifyContent: "center",
-  alignItems: "center",
-  paddingVertical: 30,
-  paddingHorizontal: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 30,
+    paddingHorizontal: 20,
   },
   title: {
     fontSize: 24,
@@ -399,10 +403,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginTop: 20,
-    width: "25%", // take full width
+    width: "25%",
     paddingHorizontal: 20,
-    gap: 10, // optional, adds space between buttons
-    flexWrap: 'wrap', // allows wrapping if needed
+    gap: 10,
+    flexWrap: 'wrap',
   },
   startButton: {
     backgroundColor: "#B58392",

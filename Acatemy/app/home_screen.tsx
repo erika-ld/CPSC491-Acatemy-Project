@@ -46,7 +46,7 @@ export default function Home() {
             <Image style={styles.acatemyLogo} source={require("../assets/images/Acatemy Title Image Home.png")} resizeMode="contain" />
             <TouchableOpacity onPress={() => console.log('Navigate to pet_customization_screen')}>
               <Link href="/pet_customization_screen" style={styles.link}>
-                <Image style={styles.petImage} source={require("../assets/images/Cat Transparent Background.png")} resizeMode="contain" />
+                <Image style={styles.petImage} source={require("../assets/images/cat.png")} resizeMode="contain" />              
               </Link>
             </TouchableOpacity>
             <Text style={styles.focusText}>✨Focus✨</Text>

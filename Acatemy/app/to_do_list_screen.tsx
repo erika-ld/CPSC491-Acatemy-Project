@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, ImageBackground, ActivityIndicator } from "react-native";
 import { auth, db } from "../firebase";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
-import TaskItem from "./taskitem";
+import TaskItem from "../components/taskitem";
 import { useCoins } from "../components/coinsContext";
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -19,7 +19,6 @@ const ToDoScreen: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState<string>("");
   const [date, setDate] = useState<Date>(new Date());
-  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
   const { coins, addCoins, updateCoins } = useCoins(); // 👈 use context
   const [loading, setLoading] = useState<boolean>(true);
   
@@ -118,9 +117,7 @@ const ToDoScreen: React.FC = () => {
           value={newTask}
           onChangeText={setNewTask}
         />
-        <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-          <Text style={styles.dateButtonText}>Pick a Date</Text>
-        </TouchableOpacity>
+
         <TouchableOpacity style={styles.addButton} onPress={addTask}>
           <Text style={styles.addButtonText}>Add Task</Text>
         </TouchableOpacity>

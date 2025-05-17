@@ -1,13 +1,25 @@
-import React, { useState } from "react";
-import { ImageBackground, Text, View, StyleSheet, FlatList, Modal, TouchableOpacity, Image } from "react-native";
-import { useCoins } from "../components/coinsContext";
+import React, { useState, useEffect } from "react";
+import {
+  ImageBackground,
+  Text,
+  View,
+  StyleSheet,
+  FlatList,
+  Modal,
+  TouchableOpacity,
+  Image,
+} from "react-native";
+import { useCoins } from '../components/coinsContext';
+
 
 export default function Rewards() {
-  const { coins, setCoins } = useCoins(); // <-- Use global coins context
+  const { coins, addCoins, updateCoins } = useCoins(); // 👈 use context
   const [selectedPet, setSelectedPet] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [purchasedItems, setPurchasedItems] = useState([]);
   const [treatImage, setTreatImage] = useState(null);
+
+  const [happiness, setHappiness] = useState(60);
 
   // Pets list
   const petsList = [
@@ -26,19 +38,30 @@ export default function Rewards() {
 
   // Images of pet + item
   const preMadeImages = {
-    "1-1": require("../assets/images/dog-treat.png"), // Dog + Treat
+    "1-1": require("../assets/images/dog-bone.png"), // Dog + Bone
     "1-2": require("../assets/images/dog-bow.png"), // Dog + Bow
     "1-3": require("../assets/images/dog-bear.png"), // Dog + Bear
     "1-4": require("../assets/images/dog-hat.png"), // Dog + Hat
-    "2-1": require("../assets/images/cat-treat.png"), // Cat + Treat
+    "2-1": require("../assets/images/cat-fish.png"), // Cat + Fish
     "2-2": require("../assets/images/cat-bow.png"), // Cat + Bow
     "2-3": require("../assets/images/cat-bear.png"), // Cat + Bear
     "2-4": require("../assets/images/cat-hat.png"), // Cat + Hat
-    "3-1": require("../assets/images/plant-treat.png"), // Plant + Treat
+    "3-1": require("../assets/images/plant-pot.png"), // Plant + Treat
     "3-2": require("../assets/images/plant-bow.png"), // Plant + Bow
     "3-3": require("../assets/images/plant-bear.png"), // Plant + Bear
     "3-4": require("../assets/images/plant-hat.png"), // Plant + Hat
   };
+
+  // Decrease happiness by 20 every hour
+  useEffect(() => {
+    if (!selectedPet) return;
+
+    const interval = setInterval(() => {
+      setHappiness(prev => Math.max(prev - 20, 0));
+    }, 3600000); // 1 hour in ms
+
+    return () => clearInterval(interval);
+  }, [selectedPet]);
 
   const selectPet = (pet) => {
     setSelectedPet(pet); // Set the selected pet
@@ -53,8 +76,11 @@ export default function Rewards() {
       if (item.name === "Treat") {
         const treatImageKey = `${selectedPet.id}-1`;
         setTreatImage(preMadeImages[treatImageKey]);
-
-        // Set a timeout to clear the treat image after 3 seconds
+      
+        // Increase happiness by 20, max 100
+        setHappiness((prev) => Math.min(prev + 20, 100));
+      
+        // Clear treat image after 3 seconds
         setTimeout(() => {
           setTreatImage(null);
         }, 3000);
@@ -66,7 +92,7 @@ export default function Rewards() {
           itemName: item.name,
           image: preMadeImages[imageKey],
         };
-        setPurchasedItems((prevItems) => [...prevItems, newItem]);
+        setPurchasedItems(prevItems => [...prevItems, newItem]);
       }
     } else {
       alert("Not enough coins or no pet has been selected!");
@@ -78,7 +104,7 @@ export default function Rewards() {
   };
 
   const clearInventory = () => {
-    setPurchasedItems([]); // Clear the inventory
+    setPurchasedItems([]);
   };
 
   const closeModal = () => {
@@ -86,37 +112,54 @@ export default function Rewards() {
   };
 
   return (
-    <ImageBackground source={require("../assets/images/Background.png")} style={styles.image} resizeMode="cover">
+    <ImageBackground
+      source={require("../assets/images/Background.png")}
+      style={styles.image}
+      resizeMode="cover"
+    >
       <View style={styles.container}>
         <Text style={styles.title}>⋆౨Rewards˚</Text>
         <Text style={styles.coins}>Coins Collected: {coins} 🪙</Text>
 
-        <TouchableOpacity style={styles.collectButton} onPress={collectCoins}>
-          <Text style={styles.collectButtonText}>Collect Coins +50</Text>
-        </TouchableOpacity>
 
         {/* Pet Selection Section */}
         <Text style={styles.subtitle}>Choose a Pet:</Text>
         <FlatList
-          data={selectedPet ? [selectedPet] : petsList} 
+          data={selectedPet ? [selectedPet] : petsList}
           keyExtractor={(pet) => pet.id}
           horizontal
           renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => selectPet(item)} style={styles.petItem}>
+            <TouchableOpacity
+              onPress={() => selectPet(item)}
+              style={styles.petItem}
+            >
               <Image source={item.image} style={styles.petImage} />
               <Text style={styles.petName}>{item.name}</Text>
             </TouchableOpacity>
           )}
         />
 
+        {/* Show Happiness if pet is selected */}
+        {selectedPet && (
+          <Text style={{ color: "white", fontSize: 20, marginTop: 10 }}>
+            Happiness: {happiness}%
+          </Text>
+        )}
+
         {/* Show 'Change Pet' button if a pet is selected */}
         {selectedPet && (
-          <TouchableOpacity onPress={() => setSelectedPet(null)} style={styles.changePetButton}>
+          <TouchableOpacity
+            onPress={() => setSelectedPet(null)}
+            style={styles.changePetButton}
+          >
             <Text style={styles.changePetButtonText}>Change Pet</Text>
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => setModalVisible(true)}
+        >
           <Text style={styles.buttonText}>View Rewards</Text>
         </TouchableOpacity>
 
@@ -131,18 +174,24 @@ export default function Rewards() {
             keyExtractor={(item) => `${item.petId}-${item.itemId}`}
             renderItem={({ item }) => (
               <View style={styles.itemContainer}>
-                <Image source={item.image} style={{ width: 80, height: 80 }} /> {/* Ensure correct styling */}
-                <Text style={styles.itemText}>{item.itemName} for {item.petName}</Text>
+                <Image source={item.image} style={{ width: 80, height: 80 }} />
+                <Text style={styles.itemText}>
+                  {item.itemName} for {item.petName}
+                </Text>
               </View>
             )}
           />
         )}
 
-        {/* Display treat image if treat is purchased */}
+        {/* Treat popup */}
         {treatImage && (
-          <View style={styles.treatContainer}>
-            <Image source={treatImage} style={styles.purchasedImage} />
-            <Text style={styles.treatText}>{selectedPet?.name} is enjoying the treat! 🐾🍖</Text>
+          <View style={styles.treatOverlay}>
+            <View style={styles.treatPopup}>
+              <Image source={treatImage} style={styles.treatImageLarge} />
+              <Text style={styles.treatTextPopup}>
+                {selectedPet?.name} is enjoying the treat! 🐾🍖
+              </Text>
+            </View>
           </View>
         )}
 
@@ -158,7 +207,10 @@ export default function Rewards() {
                   const isAffordable = coins >= item.price;
                   return (
                     <TouchableOpacity
-                      style={[styles.rewardItem, { backgroundColor: isAffordable ? "#FF69B4" : "#D3D3D3" }]}
+                      style={[
+                        styles.rewardItem,
+                        { backgroundColor: isAffordable ? "#FF69B4" : "#D3D3D3" },
+                      ]}
                       onPress={() => {
                         if (isAffordable) {
                           purchaseItem(item);
@@ -167,8 +219,15 @@ export default function Rewards() {
                       }}
                       disabled={!isAffordable}
                     >
-                      <Image source={item.image} style={{ width: 80, height: 80 }} /> {/* Image style */}
-                      <Text style={[styles.rewardText, { color: isAffordable ? "#FFF" : "#777" }]}>{item.name} - {item.price}</Text>
+                      <Image source={item.image} style={{ width: 80, height: 80 }} />
+                      <Text
+                        style={[
+                          styles.rewardText,
+                          { color: isAffordable ? "#FFF" : "#777" },
+                        ]}
+                      >
+                        {item.name} - {item.price}
+                      </Text>
                     </TouchableOpacity>
                   );
                 }}
@@ -182,7 +241,10 @@ export default function Rewards() {
 
         {/* Conditionally render Clear Inventory button */}
         {purchasedItems.length > 0 && (
-          <TouchableOpacity style={styles.clearInventoryButton} onPress={clearInventory}>
+          <TouchableOpacity
+            style={styles.clearInventoryButton}
+            onPress={clearInventory}
+          >
             <Text style={styles.clearInventoryButtonText}>Clear Inventory</Text>
           </TouchableOpacity>
         )}
@@ -234,54 +296,88 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   petImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 90,
+    height: 90,
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: "#fff",
   },
   petName: {
+    fontSize: 14,
+    fontWeight: "bold",
     color: "#fff",
     marginTop: 5,
   },
   changePetButton: {
-    backgroundColor: "#FFD700",
-    padding: 10,
-    borderRadius: 5,
-    marginVertical: 10,
+    marginTop: 10,
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
   },
   changePetButtonText: {
-    color: "#000",
+    fontSize: 14,
+    color: "#FF69B4",
     fontWeight: "bold",
   },
   button: {
     backgroundColor: "#FF69B4",
-    padding: 10,
-    borderRadius: 5,
-    marginVertical: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 25,
+    borderRadius: 15,
+    marginTop: 15,
   },
   buttonText: {
+    color: "white",
+    fontSize: 16,
+  },
+  noItemsText: {
+    fontSize: 16,
     color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
+    marginTop: 10,
   },
   itemContainer: {
-    marginVertical: 5,
+    flexDirection: "row",
     alignItems: "center",
-  },
-  purchasedImage: {
-    width: 80,
-    height: 80,
-    marginBottom: 5,
+    marginBottom: 10,
   },
   itemText: {
     color: "#fff",
-    fontWeight: "bold",
+    fontSize: 18,
+    marginLeft: 10,
   },
-  noItemsText: {
-    color: "#fff",
-    fontSize: 16,
-    fontStyle: "italic",
+  treatOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  treatPopup: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 15,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  treatImageLarge: {
+    width: 120,
+    height: 120,
+    marginBottom: 15,
+  },
+  treatTextPopup: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
     textAlign: "center",
-    marginTop: 10,
   },
   modalContainer: {
     flex: 1,
@@ -323,15 +419,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   clearInventoryButton: {
-    backgroundColor: "#FF69B4", 
-    paddingVertical: 5,  
-    paddingHorizontal: 10,
-    borderRadius: 5,
-    marginVertical: 8, 
+    backgroundColor: "#FF69B4",
+    paddingVertical: 10,
+    paddingHorizontal: 25,
+    borderRadius: 15,
+    marginTop: 15,
   },
   clearInventoryButtonText: {
-    color: "#fff",
-    fontSize: 14, 
-    fontWeight: "bold",
+    color: "white",
+    fontSize: 16,
   },
 });
