@@ -29,7 +29,8 @@ Acatemy is a mobile app that helps you stay focused and motivated by giving you 
 - install node.js
 - npm install -g expo-cli 
 - npm install
-- npx expo start 
+- npx expo start
+- w
 ---
 ## Contributors
 - Students: Erika Dickson, Jair De Orta, Krystal Anh Phan, Kelly Nguyen
