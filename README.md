@@ -24,12 +24,12 @@ Acatemy is a mobile app that helps you stay focused and motivated by giving you 
 - **Dev Tools**: Visual Studio Code, npm, Git
 ---
 ## Getting Started
-git clone https://github.com/erika-ld/CPSC491-Acatemy-Project.git
-cd acatemy
-install node.js
-npm install -g expo-cli 
-npm install
-npx expo start 
+- git clone https://github.com/erika-ld/CPSC491-Acatemy-Project.git
+- cd acatemy
+- install node.js
+- npm install -g expo-cli 
+- npm install
+- npx expo start 
 ---
 ## Contributors
 Erika Dickson
