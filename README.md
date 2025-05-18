@@ -31,6 +31,11 @@ Acatemy is a mobile app that helps you stay focused and motivated by giving you 
 - Install Project Dependencies: `npm install`
 - Install any Necessary Additional Expo Modules
 - Navigate to Directory: `cd Acatemy`
+- Install expo router: `npm install expo-router`
+- Install firebase: `npm install firebase`
+- Install react vector icons: `npm install react-native-vector-icons`
+- Install expo speech: `expo install expo-speech`
+- Install navigator drawer: `npx expo install @react-navigation/drawer`
 - Start Project: `npx expo start`
 - Open in Web Browser: `w`
 ---
