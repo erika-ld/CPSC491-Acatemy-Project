@@ -1,5 +1,13 @@
 {
   "dependencies": {
-    "react-native-linear-gradient": "^2.8.3"
+    "@expo/metro-runtime": "~4.0.1",
+    "firebase": "^11.7.3",
+    "react-dom": "18.3.1",
+    "react-native-linear-gradient": "^2.8.3",
+    "react-native-web": "~0.19.13"
+  },
+  "devDependencies": {
+    "@types/react": "~18.3.12",
+    "typescript": "^5.3.3"
   }
 }
